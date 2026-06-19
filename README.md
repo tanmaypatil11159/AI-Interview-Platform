@@ -27,5 +27,3 @@ An AI-powered interview preparation platform that helps users practice mock inte
 
 ### AI Integration
 - OpenAI API
-
-
