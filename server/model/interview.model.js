@@ -25,7 +25,7 @@ const interviewSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    experiance: {
+    experience: {
         type: String,
         required: true
     },
@@ -46,7 +46,7 @@ const interviewSchema = new mongoose.Schema({
     }
 },{timestamps:true});
 
-const Interview = mongoose.model(interviewSchema,questionSchema)
+const Interview = mongoose.model("Interview",interviewSchema)
 
 export default Interview
 
