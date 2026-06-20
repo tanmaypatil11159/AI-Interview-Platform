@@ -2,7 +2,7 @@ import axios from "axios";
 
 export const askAi = async (message) => {
     try {
-        if(!message || Array.isArray(message) || message.length === 0) {
+        if (!message || message.length === 0) {
             throw new Error("No message provided");
         }
         const response = await axios.post("https://openrouter.ai/api/v1/chat/completions",

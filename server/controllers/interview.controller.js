@@ -48,6 +48,7 @@ export const AnalyzeResume = async (req, res) => {
         ];
 
         const aiResponce = await askAi(messages);
+        console.log(messages)
         const parsed = JSON.parse(aiResponce)
         fs.unlinkSync(filePath)
 
