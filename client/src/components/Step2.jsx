@@ -1,17 +1,18 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Mic } from "lucide-react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { ServerUrl } from "../utils/constants";
 import femaleVideo from "../assets/female-ai.mp4";
 import maleVideo from "../assets/male-ai.mp4";
+import { FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
 
 function Step2({ interviewData, onFinish }) {
 
   const { interviewId, questions = [], userName } = interviewData || {};
   const [isIntroPhase, setIsIntroPhase] = useState(true)
   const [isMicOn, setIsMicOn] = useState(true)
-  const recognitionRef = useRef(null)
+  const recognitionRef = useRef(null);
+  const finalTranscriptRef = useRef("");
   const [isAIPlaying, setIsAIPlaying] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
   const [answer, setAnswer] = useState("")
@@ -19,20 +20,25 @@ function Step2({ interviewData, onFinish }) {
   const [timeLeft, setTimeLeft] = useState(60)
   const [selectedVoice, setSelectedVoice] = useState(null)
   const [isSubmmiting, setIsSubmmiting] = useState(false)
-  const [voiceGender, setVoiceGender] = useState("female")
+  const [voiceGender, setVoiceGender] = useState("male")
   const [subtitle, setSubtitle] = useState("")
 
   const videoRef = useRef(null)
   const currentQuestion = questions[currentIndex]
   const totalQuestions = questions.length;
 
-  useEffect(() => {
-    if (timeLeft <= 0) return;
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => prev - 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft]);
+useEffect(() => {
+  if (timeLeft <= 0) {
+    submitAnswer();
+    return;
+  }
+
+  const timer = setInterval(() => {
+    setTimeLeft((prev) => prev - 1);
+  }, 1000);
+
+  return () => clearInterval(timer);
+}, [timeLeft]);
 
   const handleSubmit = () => {
     submitCurrentAnswer();
@@ -45,7 +51,7 @@ function Step2({ interviewData, onFinish }) {
     }
 
     const questionIndex = currentIndex;
-    const timeLimit = currentQuestion?.timeLimit || 60;
+    const timeLimit = currentQuestion?.timeLimit || 30;
     const timeTaken = Math.max(0, timeLimit - timeLeft);
 
     try {
@@ -69,7 +75,6 @@ function Step2({ interviewData, onFinish }) {
         setCurrentIndex(nextIndex);
         setTimeLeft(questions[nextIndex]?.timeLimit || 60);
       } else {
-        // finish interview
         const finishRes = await axios.post(
           `${ServerUrl}/api/interview/finish`,
           { interviewId },
@@ -86,17 +91,23 @@ function Step2({ interviewData, onFinish }) {
     }
   };
 
-  const [isRecording, setIsRecording] = useState(false);
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const recognition = SpeechRecognition ? new SpeechRecognition() : null;
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-  if (recognition) {
+    if (!SpeechRecognition) return;
+
+    const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
-    recognition.lang = "en-US";
-  }
+    recognition.lang = "en-IN";
+    recognitionRef.current = recognition;
+  }, []);
+
+  const [isRecording, setIsRecording] = useState(false);
 
   const toggleRecording = () => {
+    const recognition = recognitionRef.current;
+
     if (!recognition) {
       alert("Speech Recognition not supported in this browser.");
       return;
@@ -106,90 +117,96 @@ function Step2({ interviewData, onFinish }) {
       recognition.start();
 
       recognition.onresult = (event) => {
-        let transcript = "";
+        let interim = "";
+        let final = finalTranscriptRef.current;
 
         for (
           let i = event.resultIndex;
           i < event.results.length;
           i++
         ) {
-          transcript += event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            final +=
+              event.results[i][0].transcript + " ";
+          } else {
+            interim +=
+              event.results[i][0].transcript;
+          }
         }
 
-        setAnswer(transcript);
+        finalTranscriptRef.current = final;
+
+        setAnswer(final + interim);
       };
 
       recognition.onend = () => {
         setIsRecording(false);
       };
-    } else {
-      recognition.stop();
-    }
 
-    setIsRecording(!isRecording);
+      setIsRecording(true);
+    } else {
+      finalTranscriptRef.current = answer + " ";
+
+      recognition.stop();
+
+      setIsRecording(false);
+    }
   };
 
   const radius = 45;
   const circumference = 2 * Math.PI * radius;
   const progress = (timeLeft / 30) * circumference;
 
-  useEffect(() => {
-    if (questions && questions.length) {
-      setTimeLeft(questions[currentIndex]?.timeLimit || 60);
-    }
-  }, [questions, currentIndex]);
+useEffect(() => {
+  if (!questions.length) return;
+
+  setTimeLeft(
+    questions[currentIndex]?.timeLimit || 60
+  );
+}, [currentIndex, questions]);
 
 
-  if (!interviewData) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold">Preparing interview...</h2>
-          <p className="text-sm text-gray-500">Please wait a moment.</p>
-        </div>
-      </div>
-    );
-  }
+
 
   const hasQuestions = Array.isArray(questions) && questions.length > 0;
 
   useEffect(() => {
     const loadVoices = () => {
-  const voices = window.speechSynthesis.getVoices();
+      const voices = window.speechSynthesis.getVoices();
 
-  let voice = null;
+      let voice = null;
 
-  if (voiceGender === "male") {
-    voice =
-    voices.find((v) =>
-      v.name.includes("David")
-    ) ||
-    voices.find((v) =>
-      v.name.includes("Mark")
-  ) ||
-      voices.find((v) =>
-        v.name.includes("George")
+      if (voiceGender === "male") {
+        voice =
+          voices.find((v) =>
+            v.name.includes("David")
+          ) ||
+          voices.find((v) =>
+            v.name.includes("Mark")
+          ) ||
+          voices.find((v) =>
+            v.name.includes("George")
+          );
+      } else {
+        voice =
+          voices.find((v) =>
+            v.name.includes("Zira")
+          ) ||
+          voices.find((v) =>
+            v.name.includes("Hazel")
+          ) ||
+          voices.find((v) =>
+            v.name.includes("Susan")
+          );
+      }
+
+      console.log(
+        "Selected Voice:",
+        voice?.name
       );
-  } else {
-    voice =
-      voices.find((v) =>
-        v.name.includes("Zira")
-      ) ||
-      voices.find((v) =>
-        v.name.includes("Hazel")
-      ) ||
-      voices.find((v) =>
-        v.name.includes("Susan")
-      );
-  }
 
-  console.log(
-    "Selected Voice:",
-    voice?.name
-  );
-
-  setSelectedVoice(voice || voices[0]);
-};
+      setSelectedVoice(voice || voices[0]);
+    };
 
     loadVoices();
 
@@ -220,7 +237,7 @@ function Step2({ interviewData, onFinish }) {
 
       utterance.onstart = () => {
         setIsAIPlaying(true);
-        setSubtitle(humanText);
+        setSubtitle(text);
 
         if (videoRef.current) {
           videoRef.current.currentTime = 0;
@@ -282,20 +299,95 @@ function Step2({ interviewData, onFinish }) {
     isIntroPhase
   ]);
 
+  useEffect(() => {
+    const loadVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+
+      console.log("Available Voices:");
+      voices.forEach((voice) => {
+        console.log(voice.name);
+      });
+    };
+
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }, []);
+
+const submitAnswer = async () => {
+  if (isSubmmiting) return;
+
+  try {
+    setIsSubmmiting(true);
+
+    const result = await axios.post(
+      `${ServerUrl}/api/interview/submit-answer`,
+      {
+        interviewId,
+        questionIndex: currentIndex,
+        answer,
+        timeTaken:
+          (currentQuestion?.timeLimit || 60) -
+          timeLeft,
+      },
+      {
+        withCredentials: true,
+      }
+    );
+
+    setFeedback(result.data.feedback);
+
+    if (result.data.feedback) {
+      await speakText(result.data.feedback);
+    }
+
+    if (currentIndex === totalQuestions - 1) {
+      await finishInterview();
+    } else {
+      setTimeout(() => {
+        setCurrentIndex((prev) => prev + 1);
+        setAnswer("");
+        setFeedback("");
+      }, 1500);
+    }
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setIsSubmmiting(false);
+  }
+};
+
+
+const handleNext = async () => {
+  if (currentIndex + 1 >= questions.length) {
+    finishInterview();
+    return;
+  }
+
+  setAnswer("");
+  setFeedback("");
+
+  setCurrentIndex((prev) => prev + 1);
+};
+
+  const finishInterview = async() => {
+    try {
+      const result = await axios.post(ServerUrl + "/api/interview/finish",{
+        interviewId,
+      },{withCredentials:true})
+      onFinish(result.data)
+    } catch (e) {
+
+    }
+  }
 useEffect(() => {
-  const loadVoices = () => {
-    const voices = window.speechSynthesis.getVoices();
+  return () => {
+    window.speechSynthesis.cancel();
 
-    console.log("Available Voices:");
-    voices.forEach((voice) => {
-      console.log(voice.name);
-    });
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
   };
-
-  loadVoices();
-  window.speechSynthesis.onvoiceschanged = loadVoices;
 }, []);
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -338,40 +430,40 @@ useEffect(() => {
           </motion.div>
 
           <AnimatePresence mode="wait">
-  {isAIPlaying && subtitle && (
-    <motion.div
-      key={subtitle}
-      initial={{
-        opacity: 0,
-        y: 15,
-        scale: 0.95,
-      }}
-      animate={{
-        opacity: 1,
-        y: 0,
-        scale: 1,
-      }}
-      exit={{
-        opacity: 0,
-        y: -15,
-        scale: 0.95,
-      }}
-      transition={{
-        duration: 0.4,
-      }}
-      className="bg-white border rounded-2xl shadow-sm p-4"
-    >
-      <p className="text-sm text-gray-700 text-center leading-relaxed">
-        {subtitle}
-      </p>
-    </motion.div>
-  )}
-</AnimatePresence>
-          
+            {isAIPlaying && subtitle && (
+              <motion.div
+                key={subtitle}
+                initial={{
+                  opacity: 0,
+                  y: 15,
+                  scale: 0.95,
+                }}
+                animate={{
+                  opacity: 1,
+                  y: 0,
+                  scale: 1,
+                }}
+                exit={{
+                  opacity: 0,
+                  y: -15,
+                  scale: 0.95,
+                }}
+                transition={{
+                  duration: 0.4,
+                }}
+                className="bg-white border rounded-2xl shadow-sm p-4"
+              >
+                <p className="text-sm text-gray-700 text-center leading-relaxed">
+                  {subtitle}
+                </p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
 
           {/* Status Card */}
           <motion.div
-            
+
             transition={{
               duration: 3,
               repeat: Infinity
@@ -383,19 +475,19 @@ useEffect(() => {
                 Interview Status
               </h3>
 
-              {isAIPlaying && 
-              <motion.span
-                animate={{
-                  opacity: [1, 0.5, 1]
-                }}
-                transition={{
-                  duration: 1.5,
-                  repeat: Infinity
-                }}
-                className="text-green-600 text-sm font-semibold"
-              >
-                {voiceGender === "male" ? "David is speaking..." : "Jenny is speaking..."}
-              </motion.span>
+              {isAIPlaying &&
+                <motion.span
+                  animate={{
+                    opacity: [1, 0.5, 1]
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity
+                  }}
+                  className="text-green-600 text-sm font-semibold"
+                >
+                  {voiceGender === "male" ? "David is speaking..." : "Jenny is speaking..."}
+                </motion.span>
 
               }
             </div>
@@ -531,6 +623,42 @@ useEffect(() => {
             </motion.div>
           )}
 
+          <AnimatePresence>
+  {feedback && (
+    <motion.div
+      initial={{
+        opacity: 0,
+        y: 15,
+      }}
+      animate={{
+        opacity: 1,
+        y: 0,
+      }}
+      exit={{
+        opacity: 0,
+      }}
+      transition={{
+        duration: 0.4,
+      }}
+      className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4"
+    >
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-semibold text-emerald-700">
+          Interview Feedback
+        </h3>
+
+        <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">
+          AI Generated
+        </span>
+      </div>
+
+      <p className="text-gray-700 text-sm leading-6">
+        {feedback}
+      </p>
+    </motion.div>
+  )}
+</AnimatePresence>
+
           {/* Answer Area */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -558,31 +686,44 @@ useEffect(() => {
                   ? {
                     scale: [1, 1.15, 1],
                     boxShadow: [
-                      "0 0 0px rgba(239,68,68,0.5)",
-                      "0 0 20px rgba(239,68,68,0.8)",
-                      "0 0 0px rgba(239,68,68,0.5)"
-                    ]
+                      "0 0 0 0 rgba(0,0,0,0.7)",
+                      "0 0 0 15px rgba(0,0,0,0)",
+                      "0 0 0 0 rgba(0,0,0,0)",
+                    ],
                   }
                   : {}
               }
               transition={{
-                duration: 1,
-                repeat: isRecording ? Infinity : 0
+                duration: 1.5,
+                repeat: isRecording ? Infinity : 0,
               }}
-              className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg
-      ${isRecording
-                  ? "bg-red-500 text-white"
-                  : "bg-gray-100 text-gray-700"
-                }`}
+              className="relative w-14 h-14 rounded-full bg-black text-white flex items-center justify-center shadow-xl"
             >
-              <Mic size={24} />
+{isRecording ? (
+  <FaMicrophone size={24} />
+) : (
+  <FaMicrophoneSlash size={24} />
+)}
+              {isRecording && (
+                <motion.span
+                  animate={{
+                    scale: [1, 1.8],
+                    opacity: [0.7, 0],
+                  }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                  }}
+                  className="absolute inset-0 rounded-full border-4 border-black"
+                />
+              )}
             </motion.button>
 
             {/* Submit Button */}
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
-              onClick={handleSubmit}
+              onClick={submitAnswer}
               disabled={!hasQuestions || isSubmmiting}
               className="flex-1 h-14 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-lg disabled:opacity-50"
             >
