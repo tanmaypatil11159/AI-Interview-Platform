@@ -6,8 +6,6 @@ import { Sparkles, BriefcaseBusiness, Mic, Clock3 } from "lucide-react";
 import Footer from "../components/Footer";
 import InfiniteCardGallery from "../components/InfiniteCardGallery";
 
-// ---- Motion variants -------------------------------------------------
-
 const heroContainer = {
   hidden: { opacity: 0 },
   visible: {

@@ -7,6 +7,7 @@ import { ServerUrl } from "./utils/constants.js";
 import { useDispatch } from "react-redux";
 import { setUserData } from "./redux/userSlice.js";
 import Interview from "./pages/Interview.jsx";
+import Step2 from "./components/Step2.jsx";
 
 function App() {
   const dispatch = useDispatch();

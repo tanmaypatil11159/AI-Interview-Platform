@@ -1,5 +1,7 @@
 import React,{useState} from 'react'
 import Step1 from '../components/Step1';
+import Step2 from '../components/Step2';
+import Step3 from '../components/Step3';
 
 function Interview() {
     const [step, setStep] = useState(1);
@@ -15,6 +17,7 @@ function Interview() {
       )}
 
       {step === 2 && (
+        
         <Step2 interviewData={interviewData} onFinish={(report) => {
           setInterviewData(report);
           setStep(3);

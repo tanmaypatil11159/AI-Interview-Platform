@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
+import { ServerUrl } from "../utils/constants";
 import {
   UserRound,
   Mic,
@@ -40,8 +41,7 @@ function Step1({ onStart }) {
   const [resumeText, setResumeText] = useState("");
   const [analysisDone, setAnalysisDone] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
-
-  const ServerUrl = "http://localhost:8000";
+  const [startError, setStartError] = useState("");
 
   const handleAnalyzeResume = async () => {
     if (!resumeFile) {
@@ -86,6 +86,13 @@ function Step1({ onStart }) {
   };
 
   const handleStart = async () => {
+    if (!role.trim() || !experience.trim()) {
+      setStartError("Please enter both role and experience before starting the interview.");
+      return;
+    }
+
+    setStartError("");
+
     try {
       setLoading(true);
 
@@ -122,6 +129,10 @@ function Step1({ onStart }) {
       console.error(
         "Interview Generation Error:",
         error.response?.data || error
+      );
+      setStartError(
+        error.response?.data?.message ||
+          "Failed to start interview. Please try again."
       );
     } finally {
       setLoading(false);
@@ -307,17 +318,19 @@ function Step1({ onStart }) {
               </button>
             )}
 
-            {analysisDone && (
-              <button
-                type="button"
-                onClick={handleStart}
-                disabled={loading}
-                className="w-full bg-green-600 text-white py-3 rounded-lg"
-              >
-                {loading
-                  ? "Starting..."
-                  : "Start Interview"}
-              </button>
+            <button
+              type="button"
+              onClick={handleStart}
+              disabled={loading || !role.trim() || !experience.trim()}
+              className="w-full bg-green-600 text-white py-3 rounded-lg disabled:opacity-50"
+            >
+              {loading ? "Starting..." : "Start Interview"}
+            </button>
+
+            {startError && (
+              <p className="text-sm text-red-600 mt-3">
+                {startError}
+              </p>
             )}
           </div>
         </div>
