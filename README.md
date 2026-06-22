@@ -26,4 +26,4 @@ An AI-powered interview preparation platform that helps users practice mock inte
 - MongoDB
 
 ### AI Integration
-- OpenAI API
+- OpenAI
