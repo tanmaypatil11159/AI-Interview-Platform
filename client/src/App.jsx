@@ -1,13 +1,15 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home.jsx";
 import Login from "./pages/Login.jsx";
+import Pricing from "./pages/Pricing";
 import axios from "axios";
 import { ServerUrl } from "./utils/constants.js";
 import { useDispatch } from "react-redux";
 import { setUserData } from "./redux/userSlice.js";
 import Interview from "./pages/Interview.jsx";
-import Step2 from "./components/Step2.jsx";
+import InterviewHistory from "./pages/InterviewHistory.jsx";
+import InterviewReport from "./pages/InterviewReport.jsx";
 
 function App() {
   const dispatch = useDispatch();
@@ -41,6 +43,9 @@ function App() {
       <Route path="/" element={<Home />} />
       <Route path="/auth" element={<Login />} />
       <Route path="/interview" element={<Interview />} />
+      <Route path="/history" element={<InterviewHistory />} />
+      <Route path="/pricing" element={<Pricing />} />
+      <Route path="/report/:id" element={<InterviewReport />} />
     </Routes>
   );
 }

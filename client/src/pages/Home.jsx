@@ -1,10 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
 import AuthModel from "../components/AuthModel";
 import { Sparkles, BriefcaseBusiness, Mic, Clock3 } from "lucide-react";
 import Footer from "../components/Footer";
-import InfiniteCardGallery from "../components/InfiniteCardGallery";
+import { useNavigate } from "react-router-dom";
 
 const heroContainer = {
   hidden: { opacity: 0 },
@@ -48,6 +48,7 @@ const cardVariant = {
 
 function Home() {
   const [showAuthModel, setShowAuthModel] = useState(false);
+  const navigate = useNavigate()
 
   const steps = [
     {
@@ -136,7 +137,7 @@ function Home() {
         {/* Buttons */}
         <motion.div variants={fadeUp} className="flex gap-4 mt-10">
           <motion.button
-            onClick={() => setShowAuthModel(true)}
+            onClick={()=>navigate("/interview")}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
@@ -146,6 +147,7 @@ function Home() {
           </motion.button>
 
           <motion.button
+          onClick={()=>navigate("/history")}
             whileHover={{ scale: 1.05, backgroundColor: "#f3f4f6" }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}

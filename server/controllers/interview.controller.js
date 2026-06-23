@@ -76,53 +76,53 @@ export const AnalyzeResume = async (req, res) => {
 }
 
 export const generateQuestions = async (req, res) => {
-  try {
-    let {
-      role,
-      resumeText,
-      mode,
-      experience,
-      projects,
-      skills,
-    } = req.body;
+    try {
+        let {
+            role,
+            resumeText,
+            mode,
+            experience,
+            projects,
+            skills,
+        } = req.body;
 
-    role = role?.trim();
-    experience = experience?.trim();
-    mode = mode?.trim();
+        role = role?.trim();
+        experience = experience?.trim();
+        mode = mode?.trim();
 
-    if (!role || !experience || !mode) {
-      return res.status(400).json({
-        message: "Information is missing.",
-      });
-    }
+        if (!role || !experience || !mode) {
+            return res.status(400).json({
+                message: "Information is missing.",
+            });
+        }
 
-    const user = await User.findById(req.userId);
+        const user = await User.findById(req.userId);
 
-    if (!user) {
-      return res.status(404).json({
-        message: "User not found",
-      });
-    }
+        if (!user) {
+            return res.status(404).json({
+                message: "User not found",
+            });
+        }
 
-    // if (user.credits < 50) {
-    //   return res.status(400).json({
-    //     message: "Not enough credits. Minimum 50 credits are required.",
-    //   });
-    // }
+        // if (user.credits < 50) {
+        //   return res.status(400).json({
+        //     message: "Not enough credits. Minimum 50 credits are required.",
+        //   });
+        // }
 
-    const projectText =
-      Array.isArray(projects) && projects.length
-        ? projects.join(", ")
-        : "None";
+        const projectText =
+            Array.isArray(projects) && projects.length
+                ? projects.join(", ")
+                : "None";
 
-    const skillText =
-      Array.isArray(skills) && skills.length
-        ? skills.join(", ")
-        : "None";
+        const skillText =
+            Array.isArray(skills) && skills.length
+                ? skills.join(", ")
+                : "None";
 
-    const safeResume = resumeText?.trim() || "None";
+        const safeResume = resumeText?.trim() || "None";
 
-    const userPrompt = `
+        const userPrompt = `
 Role: ${role}
 Experience: ${experience}
 Interview Mode: ${mode}
@@ -131,10 +131,10 @@ Skills: ${skillText}
 Resume: ${safeResume}
 `;
 
-    const messages = [
-      {
-        role: "system",
-        content: `
+        const messages = [
+            {
+                role: "system",
+                content: `
 You are a real human interviewer conducting a professional interview.
 
 Generate exactly 5 interview questions.
@@ -153,62 +153,62 @@ Question 3 → Medium
 Question 4 → Medium
 Question 5 → Hard
 `,
-      },
-      {
-        role: "user",
-        content: userPrompt,
-      },
-    ];
+            },
+            {
+                role: "user",
+                content: userPrompt,
+            },
+        ];
 
-    const aiResponse = await askAi(messages);
+        const aiResponse = await askAi(messages);
 
-    if (!aiResponse?.trim()) {
-      return res.status(500).json({
-        message: "AI returned empty response.",
-      });
+        if (!aiResponse?.trim()) {
+            return res.status(500).json({
+                message: "AI returned empty response.",
+            });
+        }
+
+        const questionsArray = aiResponse
+            .split("\n")
+            .map((q) => q.trim())
+            .filter(Boolean)
+            .slice(0, 5);
+
+        if (!questionsArray.length) {
+            return res.status(500).json({
+                message: "AI failed to generate questions.",
+            });
+        }
+
+        user.credits -= 50;
+        await user.save();
+
+        const interview = await Interview.create({
+            userId: user._id,
+            role,
+            experience,
+            mode,
+            resumeText: safeResume,
+            questions: questionsArray.map((q, index) => ({
+                question: q,
+                difficulty: ["easy", "easy", "medium", "medium", "hard"][index],
+                timeLimit: [60, 60, 90, 90, 120][index],
+            })),
+        });
+
+        return res.status(200).json({
+            interviewId: interview._id,
+            creditsLeft: user.credits,
+            userName: user.name,
+            questions: interview.questions,
+        });
+    } catch (error) {
+        console.error("Generate Questions Error:", error);
+
+        return res.status(500).json({
+            message: error.message,
+        });
     }
-
-    const questionsArray = aiResponse
-      .split("\n")
-      .map((q) => q.trim())
-      .filter(Boolean)
-      .slice(0, 5);
-
-    if (!questionsArray.length) {
-      return res.status(500).json({
-        message: "AI failed to generate questions.",
-      });
-    }
-
-    user.credits -= 50;
-    await user.save();
-
-    const interview = await Interview.create({
-      userId: user._id,
-      role,
-      experience,
-      mode,
-      resumeText: safeResume,
-      questions: questionsArray.map((q, index) => ({
-        question: q,
-        difficulty: ["easy", "easy", "medium", "medium", "hard"][index],
-        timeLimit: [60, 60, 90, 90, 120][index],
-      })),
-    });
-
-    return res.status(200).json({
-      interviewId: interview._id,
-      creditsLeft: user.credits,
-      userName: user.name,
-      questions: interview.questions,
-    });
-  } catch (error) {
-    console.error("Generate Questions Error:", error);
-
-    return res.status(500).json({
-      message: error.message,
-    });
-  }
 };
 
 
@@ -217,7 +217,7 @@ export const submitAnswer = async (req, res) => {
         const { interviewId, questionIndex, answer, timeTaken } = req.body;
 
         const interview = await Interview.findById(interviewId);
-        const question = interview.question[questionIndex];
+        const question = interview.questions[questionIndex];
 
         if (!answer) {
             question.score = 0;
@@ -299,7 +299,9 @@ export const submitAnswer = async (req, res) => {
 
         const aiResponce = await askAi(messages)
 
-        const parsed = JSON.parsed(aiResponce)
+        const parsed = JSON.parse(aiResponce)
+
+        console.log("parsed")
 
         question.answer = answer;
         question.confidence = parsed.confidence;
@@ -309,9 +311,8 @@ export const submitAnswer = async (req, res) => {
         question.feedback = parsed.feedback;
 
         await interview.save();
-
         return res.status(200).json({
-            feedback: parsed.feedback,
+            feedback: parsed.feedback
         });
 
     } catch (error) {
@@ -370,10 +371,11 @@ export const finishInterview = async (req, res) => {
         await interview.save()
 
         return res.status(200).json({
+            interviewId: interview._id,
             finalScore: Number(finalScore.toFixed(1)),
-            confidence: Number(avgConfidence.toFixed(1)),
-            communication: Number(avgCommunication.toFixed(1)),
-            correctness: Number(avgCorrectness.toFixed(1)),
+            confidence: Number(averageConfidence.toFixed(1)),
+            communication: Number(averageCommunication.toFixed(1)),
+            correctness: Number(averageCorrectness.toFixed(1)),
 
             questionWiseScore: interview.questions.map((q) => ({
                 question: q.question,
@@ -386,8 +388,95 @@ export const finishInterview = async (req, res) => {
         });
 
     } catch (error) {
-         return res.status(500).json({
+        return res.status(500).json({
             message: `Failed to finish interview ${error}`
         })
     }
 }
+
+export const getMyInterview = async (req, res) => {
+    try {
+        const interview = await Interview.find({ userId: req.userId })
+            .sort({ createdAt: -1 })
+            .select("role experience mode finalScore status createdAt")
+
+        return res.status(200).json(interview)
+
+
+    } catch (e) {
+        return res.status(500).json({ message: "faild find the interview" })
+
+    }
+}
+
+export const getInterviewReport = async (req, res) => {
+  try {
+    const interview = await Interview.findById(req.params.id);
+
+    if (!interview) {
+      return res.status(404).json({
+        message: "Interview not found.",
+      });
+    }
+
+    const totalQuestions = interview.questions?.length || 0;
+
+    let totalConfidence = 0;
+    let totalCommunication = 0;
+    let totalCorrectness = 0;
+
+    interview.questions.forEach((q) => {
+      totalConfidence += q.confidence || 0;
+      totalCommunication += q.communication || 0;
+      totalCorrectness += q.correctness || 0;
+    });
+
+    const averageConfidence =
+      totalQuestions > 0
+        ? totalConfidence / totalQuestions
+        : 0;
+
+    const averageCommunication =
+      totalQuestions > 0
+        ? totalCommunication / totalQuestions
+        : 0;
+
+    const averageCorrectness =
+      totalQuestions > 0
+        ? totalCorrectness / totalQuestions
+        : 0;
+
+    const finalScore = interview.finalScore || 0;
+
+    return res.status(200).json({
+      finalScore: Number(finalScore.toFixed(1)),
+
+      confidence: Number(
+        averageConfidence.toFixed(1)
+      ),
+
+      communication: Number(
+        averageCommunication.toFixed(1)
+      ),
+
+      correctness: Number(
+        averageCorrectness.toFixed(1)
+      ),
+
+      questionWiseScore: interview.questions.map((q) => ({
+        question: q.question,
+        score: q.score || 0,
+        feedback: q.feedback || "",
+        confidence: q.confidence || 0,
+        communication: q.communication || 0,
+        correctness: q.correctness || 0,
+      })),
+    });
+  } catch (e) {
+    console.error("Interview Report Error:", e);
+
+    return res.status(500).json({
+      message: e.message,
+    });
+  }
+};

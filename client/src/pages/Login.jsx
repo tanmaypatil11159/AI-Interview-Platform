@@ -1,4 +1,3 @@
-import React from "react";
 import { FaRobot } from "react-icons/fa";
 import { Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
@@ -12,7 +11,7 @@ import { useDispatch } from "react-redux";
 import { setUserData } from "../redux/userSlice.js";
 
 
-function Login(isModel = false) {
+function Login() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 

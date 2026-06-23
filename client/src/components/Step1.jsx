@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { ServerUrl } from "../utils/constants";
 import {
   UserRound,
   Mic,
   BarChart3,
-  Briefcase,
   Upload,
 } from "lucide-react";
 import axios from "axios";
