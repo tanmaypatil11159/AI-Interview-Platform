@@ -465,6 +465,7 @@ export const getInterviewReport = async (req, res) => {
 
       questionWiseScore: interview.questions.map((q) => ({
         question: q.question,
+        answer: q.answer,
         score: q.score || 0,
         feedback: q.feedback || "",
         confidence: q.confidence || 0,
@@ -474,7 +475,6 @@ export const getInterviewReport = async (req, res) => {
     });
   } catch (e) {
     console.error("Interview Report Error:", e);
-
     return res.status(500).json({
       message: e.message,
     });

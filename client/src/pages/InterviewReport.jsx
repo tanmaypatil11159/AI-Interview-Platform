@@ -29,6 +29,7 @@ function InterviewReport() {
         const result = await axios.get(`${ServerUrl}/api/interview/report/${id}`, {
           withCredentials: true,
         });
+        console.log(result.data)
         setReport(result.data);
       } catch (error) {
         console.error("Failed to fetch report:", error);
@@ -88,6 +89,7 @@ function InterviewReport() {
     { skill: "Technical", value: report?.technicalKnowledge || 0 },
   ];
 
+  
   if (!report) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#f5faf8] p-6">
