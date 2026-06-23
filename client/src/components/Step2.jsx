@@ -298,6 +298,7 @@ useEffect(() => {
           const nextIndex = currentIndex + 1;
 
           setCurrentIndex(nextIndex);
+          speakText(questions[nextIndex]?.question)
           setAnswer("");
           setFeedback("");
           timerTriggeredRef.current = false;
