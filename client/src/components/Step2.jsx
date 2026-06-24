@@ -29,7 +29,6 @@ function Step2({ interviewData, onFinish }) {
   const totalQuestions = questions.length;
 
 
-
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -347,8 +346,6 @@ useEffect(() => {
   }, []);
 
 
-
-
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -364,8 +361,6 @@ useEffect(() => {
           transition={{ duration: 0.7 }}
           className="flex flex-col gap-4"
         >
-
-
 
           {/* AI Avatar */}
           <motion.div
@@ -420,7 +415,6 @@ useEffect(() => {
               </motion.div>
             )}
           </AnimatePresence>
-
 
           {/* Status Card */}
           <motion.div

@@ -67,8 +67,7 @@ function Navbar({ onLoginClick }) {
   }, []);
 
   return (
-<div className="sticky top-0 z-50 py-4 flex justify-center">
-
+<div className="fixed top-0 left-0 right-0 z-50 py-4 flex justify-center">
    <motion.div
         initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}

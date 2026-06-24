@@ -94,18 +94,7 @@ function Home() {
           variants={fadeUp}
           className="flex items-center gap-2 border border-gray-200 bg-white px-4 py-2 rounded-full text-sm text-gray-600"
         >
-          <motion.span
-            animate={{ rotate: [0, 15, -10, 0] }}
-            transition={{
-              duration: 2.4,
-              repeat: Infinity,
-              repeatDelay: 1.5,
-              ease: "easeInOut",
-            }}
-          >
-            <Sparkles size={16} className="text-green-500" />
-          </motion.span>
-          AI Powered Smart Interview Platform
+          
         </motion.div>
 
         {/* Heading */}

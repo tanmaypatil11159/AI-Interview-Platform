@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Pointer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ServerUrl } from "../utils/constants";
 
@@ -67,12 +67,13 @@ function InterviewHistory() {
                         whileHover={{
                             y: -4,
                             scale: 1.01,
+                            
                         }}
                         onClick={()=>navigate(`/report/${item._id}`)}
-                        className="bg-white rounded-3xl shadow-sm border p-6 flex justify-between items-center"
+                        className="cursor-pointer bg-white rounded-3xl shadow-md p-6 flex justify-between items-center"
                     >
                         <div>
-                            <h2 className="text-xl font-semibold text-gray-800 capitalize">
+                            <h2 className="text-xl font-semibold text-yellow-600 capitalize">
                                 Role: {item.role}
                             </h2>
 

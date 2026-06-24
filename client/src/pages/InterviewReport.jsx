@@ -86,7 +86,7 @@ function InterviewReport() {
     { skill: "Confidence", value: report?.confidence || 0 },
     { skill: "Communication", value: report?.communication || 0 },
     { skill: "Correctness", value: report?.correctness || 0 },
-    { skill: "Technical", value: report?.technicalKnowledge || 0 },
+    { skill: "Technical", value: report?.technical || 0 },
   ];
 
   

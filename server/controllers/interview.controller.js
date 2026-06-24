@@ -257,6 +257,7 @@ export const submitAnswer = async (req, res) => {
             1. Confidence – Does the answer sound clear, confident, and well-presented?
             2. Communication – Is the language simple, clear, and easy to understand?
             3. Correctness – Is the answer accurate, relevant, and complete?
+            4. Technical - Does the candidate demonstrate strong understanding of the technology, concepts, implementation details, and best practices related to the topic?
 
             Rules:
             - Be realistic and unbiased.
@@ -283,6 +284,7 @@ export const submitAnswer = async (req, res) => {
             "confidence": number,
             "communication": number,
             "correctness": number,
+            "technical": number,
             "finalScore": number,
             "feedback": "short human feedback"
             }
@@ -307,6 +309,7 @@ export const submitAnswer = async (req, res) => {
         question.confidence = parsed.confidence;
         question.communication = parsed.communication;
         question.correctness = parsed.correctness;
+        question.technical = parsed.technical;
         question.score = parsed.finalScore;
         question.feedback = parsed.feedback;
 
@@ -341,12 +344,14 @@ export const finishInterview = async (req, res) => {
         let totalConfidence = 0;
         let totalCommunication = 0;
         let totalCorrectness = 0;
+        let totalTechnical = 0;
 
         interview.questions.forEach((q) => {
             totalScore += q.score || 0;
             totalConfidence += q.confidence || 0;
             totalCommunication += q.communication || 0;
             totalCorrectness += q.correctness || 0;
+            totalTechnical += q.technical || 0;
         });
 
         const finalScore = totalQuestions
@@ -365,6 +370,10 @@ export const finishInterview = async (req, res) => {
             ? totalCorrectness / totalQuestions
             : 0;
 
+        const averageTechnical = totalQuestions
+            ? totalTechnical / totalQuestions
+            : 0;
+
         interview.finalScore = finalScore
         interview.status = 'Completed'
 
@@ -376,6 +385,7 @@ export const finishInterview = async (req, res) => {
             confidence: Number(averageConfidence.toFixed(1)),
             communication: Number(averageCommunication.toFixed(1)),
             correctness: Number(averageCorrectness.toFixed(1)),
+            technical: Number(averageTechnical.toFixed(1)),
 
             questionWiseScore: interview.questions.map((q) => ({
                 question: q.question,
@@ -384,6 +394,7 @@ export const finishInterview = async (req, res) => {
                 confidence: q.confidence || 0,
                 communication: q.communication || 0,
                 correctness: q.correctness || 0,
+                technical: q.technical || 0,
             })),
         });
 
@@ -424,11 +435,13 @@ export const getInterviewReport = async (req, res) => {
     let totalConfidence = 0;
     let totalCommunication = 0;
     let totalCorrectness = 0;
+    let totalTechnical = 0;
 
     interview.questions.forEach((q) => {
       totalConfidence += q.confidence || 0;
       totalCommunication += q.communication || 0;
       totalCorrectness += q.correctness || 0;
+      totalTechnical += q.technical || 0;
     });
 
     const averageConfidence =
@@ -444,6 +457,11 @@ export const getInterviewReport = async (req, res) => {
     const averageCorrectness =
       totalQuestions > 0
         ? totalCorrectness / totalQuestions
+        : 0;
+
+    const averageTechnical =
+      totalQuestions > 0
+        ? totalTechnical / totalQuestions
         : 0;
 
     const finalScore = interview.finalScore || 0;
@@ -463,6 +481,10 @@ export const getInterviewReport = async (req, res) => {
         averageCorrectness.toFixed(1)
       ),
 
+      technical: Number(
+        averageTechnical.toFixed(1)
+      ),
+
       questionWiseScore: interview.questions.map((q) => ({
         question: q.question,
         answer: q.answer,
@@ -471,6 +493,7 @@ export const getInterviewReport = async (req, res) => {
         confidence: q.confidence || 0,
         communication: q.communication || 0,
         correctness: q.correctness || 0,
+        technical: q.technical || 0,
       })),
     });
   } catch (e) {

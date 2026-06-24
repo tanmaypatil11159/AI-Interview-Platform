@@ -10,7 +10,8 @@ const questionSchema = new mongoose.Schema({
     score: {type: Number, default: 0},
     confidence: {type: Number, default: 0},
     communication: {type: Number, default: 0},
-    correctness: {type: Number, default: 0}
+    correctness: {type: Number, default: 0},
+    technical: {type: Number, default: 0}
 },{timestamps:true});
 
 

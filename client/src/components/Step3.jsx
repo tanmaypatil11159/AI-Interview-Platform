@@ -68,6 +68,10 @@ function Step3({ report }) {
                   <span>Correctness</span>
                   <span>{report?.correctness ?? 0}/10</span>
                 </div>
+                <div className="flex justify-between text-gray-700">
+                  <span>Techincal</span>
+                  <span>{report?.technical ?? 0}/10</span>
+                </div>
               </div>
             </div>
 
