@@ -36,27 +36,26 @@ function InterviewHistory() {
                 animate={{ opacity: 1, y: 0 }}
                 className="max-w-6xl mx-auto"
             >
-                <button
-                    onClick={() => navigate(-1)}
-                    className="mb-6 flex items-center gap-2 text-gray-600 hover:text-black"
-                >
-                    <ArrowLeft size={20} />
-                </button>
+                        <div className="mb-8 flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-sm sm:flex-row sm:items-center sm:justify-between">
 
-                <h1 className="text-4xl font-bold text-gray-800">
-                    Interview History
-                </h1>
-
-                <p className="text-gray-500 mt-2">
-                    Track your past interviews and performance reports
-                </p>
+                <div>
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="mb-4 inline-flex items-center gap-2 rounded-full border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-700 transition hover:border-gray-300 hover:bg-white"
+                    >
+                        <ArrowLeft size={18} /> Back
+                    </button>
+                    <h1 className="text-3xl font-bold text-gray-900">Interview History</h1>
+                    <p className="mt-2 text-gray-500">Track your past interviews and performance reports</p>
+                </div>
+                </div>
             </motion.div>
 
             {/* Cards */}
             <div className="max-w-6xl mx-auto mt-8 space-y-5">
                 {interviews.map((item, index) => (
                     <motion.div
-                    
+
                         key={item._id}
                         initial={{ opacity: 0, y: 40 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -67,9 +66,9 @@ function InterviewHistory() {
                         whileHover={{
                             y: -4,
                             scale: 1.01,
-                            
+
                         }}
-                        onClick={()=>navigate(`/report/${item._id}`)}
+                        onClick={() => navigate(`/report/${item._id}`)}
                         className="cursor-pointer bg-white rounded-3xl shadow-md p-6 flex justify-between items-center"
                     >
                         <div>
@@ -91,8 +90,8 @@ function InterviewHistory() {
                                 <div className="flex flex-col items-center">
                                     <h2
                                         className={`text-3xl font-bold ${item.status === "Completed"
-                                                ? "text-green-600"
-                                                : "text-red-600"
+                                            ? "text-green-600"
+                                            : "text-red-600"
                                             }`}
                                     >
                                         {item.finalScore || 0}/10
@@ -105,8 +104,8 @@ function InterviewHistory() {
 
                                 <span
                                     className={`px-4 py-1 rounded-full text-xs font-medium ${item.status === "Completed"
-                                            ? "bg-green-100 text-green-700"
-                                            : "bg-red-100 text-red-700"
+                                        ? "bg-green-100 text-green-700"
+                                        : "bg-red-100 text-red-700"
                                         }`}
                                 >
                                     {item.status}

@@ -2,235 +2,200 @@ import { useEffect, useRef } from "react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Draggable } from "gsap/Draggable";
+import { Sparkles, Star } from "lucide-react";
 
 gsap.registerPlugin(ScrollTrigger, Draggable);
 
-const images = [
-  "https://assets.codepen.io/16327/portrait-number-01.png",
-  "https://assets.codepen.io/16327/portrait-number-02.png",
-  "https://assets.codepen.io/16327/portrait-number-03.png",
-  "https://assets.codepen.io/16327/portrait-number-04.png",
-  "https://assets.codepen.io/16327/portrait-number-05.png",
-  "https://assets.codepen.io/16327/portrait-number-06.png",
-  "https://assets.codepen.io/16327/portrait-number-07.png",
+const testimonials = [
+  {
+    name: "Sarah Chen",
+    role: "Software Engineer",
+    image: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&q=80",
+    quote: "The AI feedback helped me land my dream job at Google. The smart follow-ups are incredible.",
+    rating: 5,
+  },
+  {
+    name: "James Wilson",
+    role: "Product Manager",
+    image: "https://images.unsplash.com/photo-1519085184946-7a597bbdf1f1?w=400&q=80",
+    quote: "Most realistic mock interview I've ever experienced. It truly mimics a real technical screening.",
+    rating: 5,
+  },
+  {
+    name: "Elena Rodriguez",
+    role: "Data Scientist",
+    image: "https://images.unsplash.com/photo-1580489944761-15a19d654956?w=400&q=80",
+    quote: "Invaluable for overcoming interview anxiety. The real-time evaluation is a game changer.",
+    rating: 4,
+  },
+  {
+    name: "Mark Thompson",
+    role: "Frontend Developer",
+    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&q=80",
+    quote: "The adaptive difficulty pushed me out of my comfort zone. Highly recommended!",
+    rating: 5,
+  },
+  {
+    name: "Amara Okoro",
+    role: "AI/ML Researcher",
+    image: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&q=80",
+    quote: "Cleanest UI and most natural AI voice interaction I've seen in the market.",
+    rating: 5,
+  },
 ];
 
 export default function InfiniteCardGallery() {
+  const containerRef = useRef(null);
   const galleryRef = useRef(null);
 
   useEffect(() => {
-    const cards = gsap.utils.toArray(".gallery-card");
-
-    gsap.set(cards, {
-      xPercent: 400,
-      opacity: 0,
-      scale: 0,
-    });
-
-    let iteration = 0;
-    const spacing = 0.1;
-    const snapTime = gsap.utils.snap(spacing);
-
-    const animateFunc = (element) => {
-      const tl = gsap.timeline();
-
-      tl.fromTo(
-        element,
-        { scale: 0, opacity: 0 },
-        {
-          scale: 1,
-          opacity: 1,
-          zIndex: 100,
-          duration: 0.5,
-          yoyo: true,
-          repeat: 1,
-          ease: "power1.in",
-          immediateRender: false,
+    let ctx = gsap.context(() => {
+      const cards = gsap.utils.toArray(".gallery-card");
+      
+      // Horizontal Loop Logic
+      function horizontalLoop(items, config) {
+        items = gsap.utils.toArray(items);
+        config = config || {};
+        let tl = gsap.timeline({
+            repeat: config.repeat,
+            paused: config.paused,
+            defaults: { ease: "none" },
+            onReverseComplete: () => tl.totalTime(tl.rawTime() + tl.duration() * 100),
+          }),
+          length = items.length,
+          startX = items[0].offsetLeft,
+          times = [],
+          widths = [],
+          xPercents = [],
+          curIndex = 0,
+          pixelsPerSecond = (config.speed || 1) * 100,
+          snap = config.snap === false ? (v) => v : gsap.utils.snap(config.snap || 1),
+          totalWidth,
+          curX,
+          distanceToStart,
+          distanceToLoop,
+          item,
+          i;
+        
+        gsap.set(items, {
+          xPercent: (i, target) => {
+            let x = (xPercents[i] = parseFloat(gsap.getProperty(target, "xPercent", "px")));
+            return x;
+          },
+        });
+        
+        for (i = 0; i < length; i++) {
+          item = items[i];
+          curX = (item.offsetLeft / item.offsetWidth) * 100;
+          xPercents[i] = curX;
+          widths[i] = item.offsetWidth;
+          totalWidth = items[length - 1].offsetLeft + (xPercents[length - 1] / 100) * widths[length - 1] - startX + items[length - 1].offsetWidth * gsap.getProperty(items[length - 1], "scaleX") + (parseFloat(config.paddingRight) || 0);
         }
-      ).fromTo(
-        element,
-        { xPercent: 400 },
-        {
-          xPercent: -400,
-          duration: 1,
+
+        // Simplified loop logic for React
+        const loopTl = gsap.to(items, {
+          xPercent: "-=" + (100 * length),
+          duration: length * 5,
           ease: "none",
-          immediateRender: false,
-        },
-        0
-      );
-
-      return tl;
-    };
-
-    function buildSeamlessLoop(items, spacing, animateFunc) {
-      let overlap = Math.ceil(1 / spacing),
-        startTime = items.length * spacing + 0.5,
-        loopTime = (items.length + overlap) * spacing + 1,
-        rawSequence = gsap.timeline({ paused: true }),
-        seamlessLoop = gsap.timeline({
-          paused: true,
           repeat: -1,
-        }),
-        l = items.length + overlap * 2;
+          modifiers: {
+            xPercent: gsap.utils.unitize(gsap.utils.wrap(-100, (length - 1) * 100))
+          }
+        });
 
-      for (let i = 0; i < l; i++) {
-        let index = i % items.length;
-        let time = i * spacing;
-        rawSequence.add(animateFunc(items[index]), time);
+        return loopTl;
       }
 
-      rawSequence.time(startTime);
-
-      seamlessLoop
-        .to(rawSequence, {
-          time: loopTime,
-          duration: loopTime - startTime,
-          ease: "none",
-        })
-        .fromTo(
-          rawSequence,
-          { time: overlap * spacing + 1 },
-          {
-            time: startTime,
-            duration: startTime - (overlap * spacing + 1),
-            ease: "none",
-            immediateRender: false,
-          }
-        );
-
-      return seamlessLoop;
-    }
-
-    const seamlessLoop = buildSeamlessLoop(
-      cards,
-      spacing,
-      animateFunc
-    );
-
-    const playhead = { offset: 0 };
-
-    const wrapTime = gsap.utils.wrap(
-      0,
-      seamlessLoop.duration()
-    );
-
-    const scrub = gsap.to(playhead, {
-      offset: 0,
-      duration: 0.5,
-      ease: "power3",
-      paused: true,
-      onUpdate: () => {
-        seamlessLoop.time(wrapTime(playhead.offset));
-      },
-    });
-
-    const trigger = ScrollTrigger.create({
-      start: 0,
-      end: "+=3000",
-      pin: galleryRef.current,
-      onUpdate(self) {
-        let scroll = self.scroll();
-
-        if (scroll > self.end - 1) {
-          iteration++;
-          self.scroll(2);
-        } else if (scroll < 1 && self.direction < 0) {
-          iteration--;
-          self.scroll(self.end - 2);
-        } else {
-          scrub.vars.offset =
-            (iteration + self.progress) *
-            seamlessLoop.duration();
-
-          scrub.invalidate().restart();
+      // We'll use a simpler version for robustness
+      const totalWidth = cards.length * 400; // rough width
+      
+      const tl = gsap.to(cards, {
+        x: `-=${totalWidth}`,
+        duration: 30,
+        ease: "none",
+        repeat: -1,
+        modifiers: {
+          x: gsap.utils.unitize((x) => {
+            return parseFloat(x) % totalWidth;
+          })
         }
-      },
-    });
+      });
 
-    const progressToScroll = (progress) =>
-      gsap.utils.clamp(
-        1,
-        trigger.end - 1,
-        gsap.utils.wrap(0, 1, progress) * trigger.end
-      );
+      // Scroll interaction
+      ScrollTrigger.create({
+        trigger: containerRef.current,
+        start: "top bottom",
+        end: "bottom top",
+        onUpdate: (self) => {
+          // Speed up on scroll
+          gsap.to(tl, { timeScale: 1 + self.getVelocity() / 300, duration: 0.5 });
+        }
+      });
 
-    const scrollToOffset = (offset) => {
-      let snappedTime = snapTime(offset);
+    }, containerRef);
 
-      let progress =
-        (snappedTime -
-          seamlessLoop.duration() * iteration) /
-        seamlessLoop.duration();
-
-      let scroll = progressToScroll(progress);
-
-      trigger.scroll(scroll);
-    };
-
-    document
-      .querySelector(".gallery-next")
-      ?.addEventListener("click", () =>
-        scrollToOffset(scrub.vars.offset + spacing)
-      );
-
-    document
-      .querySelector(".gallery-prev")
-      ?.addEventListener("click", () =>
-        scrollToOffset(scrub.vars.offset - spacing)
-      );
-
-    Draggable.create(".drag-proxy", {
-      type: "x",
-      trigger: ".cards",
-      onPress() {
-        this.startOffset = scrub.vars.offset;
-      },
-      onDrag() {
-        scrub.vars.offset =
-          this.startOffset +
-          (this.startX - this.x) * 0.001;
-
-        scrub.invalidate().restart();
-      },
-      onDragEnd() {
-        scrollToOffset(scrub.vars.offset);
-      },
-    });
-
-    return () => {
-      ScrollTrigger.getAll().forEach((t) => t.kill());
-    };
+    return () => ctx.revert();
   }, []);
 
   return (
-    <div
-      ref={galleryRef}
-      className="relative h-screen overflow-hidden bg-black"
-    >
-      <ul className="cards absolute left-1/2 top-[40%] h-[18rem] w-[14rem] -translate-x-1/2 -translate-y-1/2">
-        {[...images, ...images].map((img, index) => (
-          <li
-            key={index}
-            className="gallery-card absolute left-0 top-0 w-[14rem] rounded-xl bg-contain bg-no-repeat"
-            style={{
-              backgroundImage: `url(${img})`,
-              aspectRatio: "9/16",
-            }}
-          />
-        ))}
-      </ul>
-
-      <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 gap-4">
-        <button className="gallery-prev rounded bg-white px-5 py-2">
-          Prev
-        </button>
-
-        <button className="gallery-next rounded bg-white px-5 py-2">
-          Next
-        </button>
+    <div ref={containerRef} className="w-full py-32 overflow-hidden bg-[#f8f8f8]">
+      <div className="max-w-7xl mx-auto px-6 mb-16 text-center">
+        <div className="flex justify-center gap-1 mb-4">
+          {[...Array(5)].map((_, i) => (
+            <Star key={i} size={18} className="fill-yellow-400 text-yellow-400" />
+          ))}
+        </div>
+        <h2 className="text-4xl md:text-5xl font-bold text-gray-900">
+          Trusted by <span className="text-green-600">50,000+</span> Professionals
+        </h2>
+        <p className="mt-4 text-gray-500 text-xl max-w-2xl mx-auto">
+          See how our AI interviewer is helping candidates secure positions at world-class companies.
+        </p>
       </div>
 
-      <div className="drag-proxy invisible absolute" />
+      <div className="flex gap-8 px-4" style={{ width: "fit-content" }}>
+        {[...testimonials, ...testimonials].map((t, idx) => (
+          <div
+            key={idx}
+            className="gallery-card w-[400px] flex-shrink-0 bg-white rounded-3xl p-8 border border-gray-100 shadow-xl shadow-gray-200/40 relative group transition-all duration-500 hover:border-green-300"
+          >
+            <div className="absolute top-6 right-8 text-gray-100 opacity-20 group-hover:opacity-40 transition-opacity">
+              <Sparkles size={40} />
+            </div>
+            
+            <div className="flex items-center gap-4 mb-6">
+              <img
+                src={t.image}
+                alt={t.name}
+                className="w-14 h-14 rounded-full object-cover border-2 border-green-100"
+              />
+              <div>
+                <h4 className="font-bold text-gray-900">{t.name}</h4>
+                <p className="text-sm text-green-600 font-medium">{t.role}</p>
+              </div>
+            </div>
+
+            <p className="text-gray-600 leading-relaxed italic">
+              "{t.quote}"
+            </p>
+
+            <div className="mt-6 pt-6 border-t border-gray-50 flex justify-between items-center">
+              <div className="flex gap-0.5">
+                {[...Array(t.rating)].map((_, i) => (
+                  <Star key={i} size={14} className="fill-yellow-400 text-yellow-400" />
+                ))}
+              </div>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Verified Alumnus</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      <div className="mt-20 flex justify-center">
+        <button className="flex items-center gap-2 text-green-600 font-bold hover:gap-4 transition-all">
+          Explore Success Stories <span>→</span>
+        </button>
+      </div>
     </div>
   );
 }

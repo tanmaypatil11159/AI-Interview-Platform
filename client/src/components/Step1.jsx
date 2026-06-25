@@ -9,7 +9,7 @@ import {
   Mic,
   BarChart3,
   Upload,
-  Home 
+  Home
 } from "lucide-react";
 import axios from "axios";
 import { useSelector, useDispatch } from "react-redux";
@@ -22,15 +22,15 @@ function Step1({ onStart }) {
   const features = [
     {
       icon: <UserRound size={18} />,
-      text: "Choose Role & Experience",
+      text: "Choose your Role",
     },
     {
       icon: <Mic size={18} />,
-      text: "Smart Voice Interview",
+      text: "Exsperence you having",
     },
     {
       icon: <BarChart3 size={18} />,
-      text: "Performance Analytics",
+      text: "Type of interview you want",
     },
   ];
 
@@ -48,6 +48,8 @@ function Step1({ onStart }) {
   const [analysisDone, setAnalysisDone] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [startError, setStartError] = useState("");
+  const [showInstructionModal, setShowInstructionModal] = useState(false);
+  const [acceptedInstructions, setAcceptedInstructions] = useState(false);
 
   const handleAnalyzeResume = async () => {
     if (!resumeFile) {
@@ -80,8 +82,9 @@ function Step1({ onStart }) {
       setSkills(response.data.skills || []);
       setResumeText(response.data.resumeText || "");
 
-      setAnalysisDone(true);
+      await setAnalysisDone(true);
       setShowAnalysisModal(true);
+
     } catch (error) {
       console.error(
         "Resume Analysis Error:",
@@ -159,42 +162,48 @@ function Step1({ onStart }) {
   };
 
   return (
-<motion.div
-  initial={{ opacity: 0 }}
-  animate={{ opacity: 1 }}
-  transition={{ duration: 0.8 }}
-  className="h-screen w-screen bg-black relative overflow-hidden"
->
-  <motion.div
-        animate={{ y: [0, -20, 0] }}
-        transition={{
-          duration: 5,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-        className="absolute w-72 h-72 bg-green-300/20 blur-3xl rounded-full top-10 left-10"
-      />
+
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.8 }}
+      className="
+    min-h-screen
+    w-full
+    bg-white
+    relative
+    overflow-hidden
+    flex
+    items-center
+    justify-center
+    p-6
+  "
+    >
+
+
 
       <motion.div
-        animate={{ y: [0, 20, 0] }}
+        initial={{ opacity: 0, y: 40, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{
-          duration: 6,
-          repeat: Infinity,
-          ease: "easeInOut",
+          duration: 0.8,
+          ease: "easeOut",
         }}
-        className="absolute w-72 h-72 bg-blue-300/20 blur-3xl rounded-full bottom-10 right-10"
-      />
+        className="
 
-<motion.div
-  initial={{ opacity: 0, y: 50, scale: 1 }}
-  animate={{ opacity: 1, y: 0, scale: 1 }}
-  transition={{
-    duration: 0.8,
-    ease: "easeOut",
-  }}
-  className="w-screen h-screen bg-white overflow-hidden grid md:grid-cols-2 relative z-10"
->
-  
+    absolute
+    inset-4
+    bg-white
+    rounded-[36px]
+    overflow-hidden
+    shadow-2xl
+    grid
+    grid-cols-1
+    lg:grid-cols-3
+    z-10
+  "
+      >
+
         {/* Left Side */}
         <motion.div
           initial={{ x: -80, opacity: 0 }}
@@ -203,10 +212,16 @@ function Step1({ onStart }) {
             duration: 0.8,
             delay: 0.2,
           }}
-          className="bg-black p-10 flex flex-col justify-center"
+          className="
+    lg:col-span-1
+    bg-black
+    p-12
+    flex
+    flex-col
+    justify-center"
         >
 
-          <h1 className="text-4xl font-bold text-white mb-4">
+          <h1 className="text-5xl font-bold text-white mb-4">
             Start Your AI Interview
           </h1>
 
@@ -232,114 +247,107 @@ function Step1({ onStart }) {
         </motion.div>
 
         {/* Right Side */}
-        <div className="p-10 rounded-tl-[50px] rounded-bl-[50px]">
-
-          <h2 className="text-4xl font-bold mb-8">
+        <div
+          className="
+    lg:col-span-2
+    p-10
+    overflow-y-auto
+    hide-scrollbar
+"
+        >
+          <h2 className="text-5xl font-bold mb-8">
             Interview Setup
           </h2>
 
           <div className="space-y-5">
-           <div className="space-y-5">
+            <div className="space-y-5">
 
-  {/* Role */}
-  <div>
-    <label className="block text-sm font-semibold text-black mb-2">
-      Role
-    </label>
+              {/* Role */}
+              <div>
+                <input
+                  type="text"
+                  value={role}
+                  onChange={(e) => setRole(e.target.value)}
+                  placeholder="e.g. MERN Stack Developer"
+                  className="w-full  border border-green-600 rounded-xl py-3 px-4 text-black focus:outline-none focus:ring-2 focus:ring-black"
+                />
+              </div>
 
-    <input
-      type="text"
-      value={role}
-      onChange={(e) => setRole(e.target.value)}
-      placeholder="e.g. MERN Stack Developer"
-      className="w-full  border border-green-600 rounded-xl py-3 px-4 text-black focus:outline-none focus:ring-2 focus:ring-black"
-    />
-  </div>
+              {/* Experience */}
+              <div>
+                <input
+                  type="text"
+                  value={experience}
+                  onChange={(e) => setExperience(e.target.value)}
+                  placeholder="e.g. Fresher, 1 Year, 3 Years"
+                  className="w-full border border-green-600 rounded-xl py-3 px-4 text-black focus:outline-none focus:ring-2 focus:ring-black"
+                />
+              </div>
 
-  {/* Experience */}
-  <div>
-    <label className="block text-sm font-semibold text-black mb-2">
-      Experience
-    </label>
+              {/* Interview Type */}
+              <div>
 
-    <input
-      type="text"
-      value={experience}
-      onChange={(e) => setExperience(e.target.value)}
-      placeholder="e.g. Fresher, 1 Year, 3 Years"
-      className="w-full border border-green-600 rounded-xl py-3 px-4 text-black focus:outline-none focus:ring-2 focus:ring-black"
-    />
-  </div>
+                <select
+                  value={mode}
+                  onChange={(e) => setMode(e.target.value)}
+                  className="w-full border border-green-600 rounded-xl py-3 px-4 text-black focus:outline-none focus:ring-2 focus:ring-black"
+                >
+                  <option value="Technical">Technical</option>
+                  <option value="HR">HR</option>
+                </select>
+              </div>
 
-  {/* Interview Type */}
-  <div>
-    <label className="block text-sm font-semibold text-black mb-2">
-      Interview Type
-    </label>
-
-    <select
-      value={mode}
-      onChange={(e) => setMode(e.target.value)}
-      className="w-full border border-green-600 rounded-xl py-3 px-4 text-black focus:outline-none focus:ring-2 focus:ring-black"
-    >
-      <option value="Technical">Technical</option>
-      <option value="HR">HR</option>
-      <option value="Behavioral">Behavioral</option>
-      <option value="System Design">System Design</option>
-    </select>
-  </div>
-
-</div>
+            </div>
 
             <motion.label
-  whileHover={{
-    scale: 1.02,
-    borderColor: "#000000",
-  }}
-  whileTap={{ scale: 0.98 }}
-  transition={{
-    type: "spring",
-    stiffness: 300,
-    damping: 20,
-  }}
-  className="border-2 border-dashed border-gray-300 rounded-2xl h-40 flex flex-col items-center justify-center cursor-pointer bg-white hover:bg-gray-50 transition-all"
->
-  {resumeFile ? (
-    <FileText
-      size={48}
-      className="text-red-500 "
-    />
-  ) : (
-    <Upload
-      size={48}
-      className="text-black"
-    />
-  )}
+              whileHover={{
+                scale: 1.02,
+                borderColor: "#000000",
+              }}
+              whileTap={{ scale: 0.98 }}
+              transition={{
+                type: "spring",
+                stiffness: 300,
+                damping: 20,
+              }}
+              className="border-2 border-dashed border-gray-300 rounded-2xl h-40 flex flex-col items-center justify-center cursor-pointer bg-white hover:bg-gray-50 transition-all"
+            >
+              {resumeFile ? (
+                <FileText
+                  size={48}
+                  className="text-red-500 "
+                />
+              ) : (
+                <Upload
+                  size={48}
+                  className="text-black"
+                />
+              )}
 
-  <span className="text-black font-medium text-lg">
-    {resumeFile
-      ? resumeFile.name
-      : "Upload Resume"}
-  </span>
+              <span className="text-black font-medium text-lg">
+                {resumeFile
+                  ? resumeFile.name
+                  : "Upload Resume"}
+              </span>
 
-  <span className="text-gray-500 text-sm mt-2">
-    PDF, DOC, DOCX
-  </span>
+              <span className="text-gray-500 text-sm mt-2">
+                PDF, DOC, DOCX
+              </span>
 
-  <input
-    type="file"
-    accept=".pdf,.doc,.docx"
-    className="hidden"
-    onChange={(e) => {
-      if (e.target.files[0]) {
-        setResumeFile(e.target.files[0]);
-        setShowAnalysisModal(false);
-        setProjects([]);
-        setSkills([]);
-      }
-    }}
-  />
-</motion.label>
+              <input
+                type="file"
+                accept=".pdf,.doc,.docx"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files[0]) {
+                    setResumeFile(e.target.files[0]);
+                    setShowAnalysisModal(false);
+                    setProjects([]);
+                    setSkills([]);
+                  }
+                }}
+              />
+            </motion.label>
 
             <AnimatePresence>
               {showAnalysisModal && (
@@ -430,7 +438,11 @@ function Step1({ onStart }) {
 
                     <div className=" p-5 flex justify-end">
                       <button
-                        onClick={() => setShowAnalysisModal(false)}
+                        onClick={() => {
+                          setShowAnalysisModal(false);
+                          setAcceptedInstructions(false);
+                          setShowInstructionModal(true);
+                        }}
                         className=" cursor-pointer bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800"
                       >
                         Continue
@@ -441,39 +453,209 @@ function Step1({ onStart }) {
               )}
             </AnimatePresence>
 
-<div className="flex gap-4">
-  {resumeFile && (
-    <motion.button
-      type="button"
-      onClick={handleAnalyzeResume}
-      disabled={analyzing}
-      whileHover={{ scale: 1.02 }}
-      whileTap={{ scale: 0.98 }}
-      className="cursor-pointer flex-1 bg-white border border-black text-black py-4 rounded-2xl font-semibold"
-    >
-      {analyzing
-        ? "Analyzing..."
-        : "Analyze Resume"}
-    </motion.button>
-  )}
+            <AnimatePresence>
+              {showInstructionModal && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowInstructionModal(false)}
+                  className="fixed inset-0 w-screen h-screen bg-black/60 backdrop-blur-xl z-[9999] flex items-center justify-center"
+                >
+                  <motion.div
+                    onClick={(e) => e.stopPropagation()}
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    exit={{ scale: 0.9, opacity: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="bg-white w-full max-w-3xl rounded-3xl shadow-2xl overflow-hidden"
+                  >
+                    {/* Header */}
+                    <div className="flex justify-between items-center px-6 py-5">
+                      <h2 className="text-2xl font-bold">
+                        Interview Instructions
+                      </h2>
 
-  <motion.button
-    type="button"
-    onClick={handleStart}
-    disabled={
-      loading ||
-      !role.trim() ||
-      !experience.trim()
-    }
-    whileHover={{ scale: 1.02 }}
-    whileTap={{ scale: 0.98 }}
-    className=" cursor-pointer flex-1 bg-black text-white py-4 rounded-2xl font-semibold shadow-lg hover:bg-gray-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-  >
-    {loading
-      ? "Starting..."
-      : "Start Interview"}
-  </motion.button>
-</div>
+                      <button
+                        onClick={() => setShowInstructionModal(false)}
+                        className="cursor-pointer w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 text-xl"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* Body */}
+                    <div className="p-6 max-h-[70vh] overflow-y-auto hide-scrollbar space-y-6">
+
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">
+                          📖 Read Carefully
+                        </h3>
+
+                        <div className="border border-green-600 rounded-xl p-4">
+                          Read or listen to each question completely before answering.
+                          Make sure you understand the question before responding.
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">
+                          ⏱️ Time Limit
+                        </h3>
+
+                        <div className="border border-green-600 rounded-xl p-4">
+                          Every question has a fixed timer. Submit your answer before
+                          the timer expires.
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">
+                          💬 Answer Clearly
+                        </h3>
+
+                        <div className="border border-green-600 rounded-xl p-4">
+                          Keep your answers relevant, concise and structured. Focus on
+                          explaining your thought process.
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">
+                          💻 Interview Mode
+                        </h3>
+
+                        <div className="border border-green-600 rounded-xl p-4">
+                          Depending on the interview mode you selected, answer each question either
+                          by speaking clearly or by typing your response in the provided answer box.
+                          Ensure your responses are complete before submitting.
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">
+                          🌐 Internet Connection
+                        </h3>
+
+                        <div className="border border-green-600 rounded-xl p-4">
+                          Ensure you have a stable internet connection throughout the
+                          interview.
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">
+                          🚫 Don't Refresh
+                        </h3>
+
+                        <div className="border border-green-600 rounded-xl p-4">
+                          Do not refresh, close or navigate away from the interview
+                          page while the interview is in progress.
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">
+                          🧠 Be Yourself
+                        </h3>
+
+                        <div className="border border-green-600 rounded-xl p-4">
+                          Answer honestly. AI evaluates your communication,
+                          confidence and reasoning skills.
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="font-semibold text-lg mb-2">
+                          ✅ One Attempt
+                        </h3>
+
+                        <div className="border border-green-600 rounded-xl p-4">
+                          Questions appear one at a time. Once submitted, previous
+                          answers cannot be changed.
+                        </div>
+                      </div>
+
+                      {/* Checkbox */}
+                      <div className="border border-red-700 rounded-xl p-4">
+                        <label className="flex items-start gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={acceptedInstructions}
+                            onChange={(e) =>
+                              setAcceptedInstructions(e.target.checked)
+                            }
+                            className="mt-1 h-5 w-5 accent-green-600"
+                          />
+
+                          <span className="text-red-500">
+                            I have read and understood all the above instructions
+                            and I am ready to begin the interview.
+                          </span>
+                        </label>
+                      </div>
+
+                    </div>
+
+                    {/* Footer */}
+                    <div className="p-5 flex justify-end gap-3">
+
+                      <button
+                        onClick={() => setShowInstructionModal(false)}
+                        className="cursor-pointer border border-gray-300 px-6 py-3 rounded-xl hover:bg-gray-100"
+                      >
+                        Cancel
+                      </button>
+
+                      <button
+                        disabled={!acceptedInstructions}
+                        onClick={() => {
+                          setShowInstructionModal(false);
+                        }}
+                        className="cursor-pointer bg-black text-white px-6 py-3 rounded-xl hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Continue
+                      </button>
+
+                    </div>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="flex gap-4">
+              {resumeFile && (
+                <motion.button
+                  type="button"
+                  onClick={handleAnalyzeResume}
+                  disabled={analyzing}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="cursor-pointer flex-1 bg-white border border-black text-black py-4 rounded-2xl font-semibold"
+                >
+                  {analyzing
+                    ? "Analyzing..."
+                    : "Analyze Resume"}
+                </motion.button>
+              )}
+
+              <motion.button
+                type="button"
+                onClick={handleStart}
+                disabled={
+                  loading ||
+                  !role.trim() ||
+                  !experience.trim()
+                }
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                className=" cursor-pointer flex-1 bg-black text-white py-4 rounded-2xl font-semibold shadow-lg hover:bg-gray-900 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading
+                  ? "Starting..."
+                  : "Start Interview"}
+              </motion.button>
+            </div>
 
             {startError && (
               <p className="text-sm text-red-600 mt-3">
@@ -484,6 +666,8 @@ function Step1({ onStart }) {
         </div>
       </motion.div>
     </motion.div>
+
+
   );
 }
 

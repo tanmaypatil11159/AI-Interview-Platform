@@ -20,6 +20,9 @@ function Step2({ interviewData, onFinish }) {
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [isSubmmiting, setIsSubmmiting] = useState(false);
   const voiceGender = "male";
+  setTimeout(()=>{
+    voiceGender = "male"
+  },1000)
   const [subtitle, setSubtitle] = useState("");
   const [timerRunning, setTimerRunning] = useState(false);
   const timerTriggeredRef = useRef(false);
@@ -293,19 +296,31 @@ useEffect(() => {
       if (currentIndex === totalQuestions - 1) {
         await finishInterview();
       } else {
-        setTimeout(() => {
-          const nextIndex = currentIndex + 1;
+setTimeout(async () => {
+  const nextIndex = currentIndex + 1;
 
-          setCurrentIndex(nextIndex);
-          speakText(questions[nextIndex]?.question)
-          setAnswer("");
-          setFeedback("");
-          timerTriggeredRef.current = false;
+  // Stop timer
+  setTimerRunning(false);
 
-          setTimeLeft(
-            questions[nextIndex]?.timeLimit || 60
-          );
-        }, 1500);
+  // Reset timer
+  setTimeLeft(
+    questions[nextIndex]?.timeLimit || 60
+  );
+
+  // Reset UI
+  setAnswer("");
+  setFeedback("");
+  timerTriggeredRef.current = false;
+
+  setCurrentIndex(nextIndex);
+
+  // Wait until AI finishes speaking
+  await speakText(questions[nextIndex]?.question);
+
+  // Start timer AFTER voice completes
+  setTimerRunning(true);
+
+}, 1500);
       }
     } catch (error) {
       console.error("Submit Error:", error);
@@ -350,16 +365,16 @@ useEffect(() => {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="w-screen h-screen bg-[#f5faf8] overflow-hidden p-4"
+      className="w-screen h-screen bg-[#E8F5FD] overflow-hidden p-4"
     >
-      <div className="h-full grid grid-cols-[320px_1fr] gap-4">
+      <div className="h-full grid grid-cols-[340px_minmax(0,1fr)] gap-4">
 
         {/* LEFT PANEL */}
         <motion.div
           initial={{ x: -80, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.7 }}
-          className="flex flex-col gap-4"
+          className="flex flex-col gap-4 h-full min-h-0"
         >
 
           {/* AI Avatar */}
@@ -407,9 +422,9 @@ useEffect(() => {
                 transition={{
                   duration: 0.4,
                 }}
-                className="bg-white border rounded-2xl shadow-sm p-4"
+                className="bg-white rounded-3xl shadow-sm p-4 text-center"
               >
-                <p className="text-sm text-gray-700 text-center leading-relaxed">
+                <p className="text-sm text-gray-700 leading-relaxed">
                   {subtitle}
                 </p>
               </motion.div>
@@ -418,52 +433,51 @@ useEffect(() => {
 
           {/* Status Card */}
           <motion.div
-
             transition={{
               duration: 3,
-              repeat: Infinity
+              repeat: Infinity,
             }}
-            className="bg-white border rounded-3xl p-5 shadow-sm"
+            className="bg-white rounded-3xl p-5 shadow-sm flex flex-col flex-1 min-h-0"
           >
             <div className="flex justify-between items-center">
               <h3 className="font-medium text-gray-600">
                 Interview Status
               </h3>
 
-              {isAIPlaying &&
+              {isAIPlaying && (
                 <motion.span
                   animate={{
-                    opacity: [1, 0.5, 1]
+                    opacity: [1, 0.5, 1],
                   }}
                   transition={{
                     duration: 1.5,
-                    repeat: Infinity
+                    repeat: Infinity,
                   }}
                   className="text-green-600 text-sm font-semibold"
                 >
-                  {voiceGender === "male" ? "David is speaking..." : "Jenny is speaking..."}
+                  {voiceGender === "male"
+                    ? "David is speaking..."
+                    : "Jenny is speaking..."}
                 </motion.span>
-
-              }
+              )}
             </div>
 
+            <div className="flex-1 min-h-0" />
 
-
-            {/* Timer */}
-            <div className="flex justify-center mt-8">
+            <div className="flex justify-center  mb-8">
               <motion.div
                 animate={
                   timeLeft <= 10
                     ? {
-                      scale: [1, 1.08, 1],
-                    }
+                        scale: [1, 1.08, 1],
+                      }
                     : {}
                 }
                 transition={{
                   duration: 0.5,
                   repeat: Infinity,
                 }}
-                className="relative w-36 h-36"
+                className="relative w-35 h-35"
               >
                 <svg
                   className="w-full h-full -rotate-90"
@@ -538,7 +552,8 @@ useEffect(() => {
               </motion.div>
             </div>
 
-            <div className="border-t mt-8 pt-6 flex justify-between">
+                {!subtitle && (
+                              <div className="border-t border-gray-400 mt-8 pt-6 flex justify-between">
               <div className="text-center">
                 <motion.h2
                   key={currentIndex}
@@ -564,6 +579,7 @@ useEffect(() => {
                 </p>
               </div>
             </div>
+                )}
           </motion.div>
         </motion.div>
 
@@ -572,12 +588,12 @@ useEffect(() => {
           initial={{ x: 80, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.7 }}
-          className="bg-white border rounded-3xl shadow-sm p-6 flex flex-col"
+          className="bg-white rounded-3xl shadow-sm p-6 flex flex-col"
         >
           <motion.h1
             initial={{ y: -20 }}
             animate={{ y: 0 }}
-            className="text-3xl font-bold text-emerald-600 mb-5"
+            className="text-4xl font-bold text-emerald-500 mb-5"
           >
             AI Smart Interview
           </motion.h1>
@@ -587,7 +603,7 @@ useEffect(() => {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
-              className="border rounded-2xl p-5 bg-gray-50"
+              className="rounded-2xl p-5 bg-gray-50"
             >
               <p className="text-sm text-gray-500">
                 Interview data was loaded, but no questions are available.
@@ -597,7 +613,7 @@ useEffect(() => {
               </p>
             </motion.div>
           ) : (
-            !isIntroPhase && (
+            !isIntroPhase && !feedback && (
               <motion.div
                 key={currentIndex}
                 initial={{
@@ -611,7 +627,7 @@ useEffect(() => {
                 transition={{
                   duration: 0.4
                 }}
-                className="border rounded-2xl p-5 bg-gray-50"
+                className="border-gray-300 border rounded-2xl p-5 bg-gray-50"
               >
                 <p className="text-sm text-gray-500">
                   Question {currentIndex + 1} of {totalQuestions}
@@ -671,7 +687,7 @@ useEffect(() => {
               onChange={(e) => setAnswer(e.target.value)}
               placeholder="Type your answer here..."
               disabled={!hasQuestions}
-              className="w-full h-full border rounded-2xl p-4 resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full h-full border text-lg font-semibold border-gray-300 bg-gray-50 rounded-2xl p-4 resize-none focus:outline-none focus:ring-1 focus:ring-emerald-500"
             />
           </motion.div>
 
@@ -687,9 +703,9 @@ useEffect(() => {
                   ? {
                     scale: [1, 1.15, 1],
                     boxShadow: [
-                      "0 0 0 0 rgba(0,0,0,0.7)",
-                      "0 0 0 15px rgba(0,0,0,0)",
-                      "0 0 0 0 rgba(0,0,0,0)",
+                      "0 0 0 0 rgba(255, 0, 0, 0.7)",
+                      "0 0 0 15px rgba(255, 0, 0, 0)",
+                      "0 0 0 0 rgba(255, 0, 0, 0.01)",
                     ],
                   }
                   : {}
@@ -698,7 +714,7 @@ useEffect(() => {
                 duration: 1.5,
                 repeat: isRecording ? Infinity : 0,
               }}
-              className="relative w-14 h-14 rounded-full bg-black text-white flex items-center justify-center shadow-xl"
+              className="relative w-14 h-14 rounded-full bg-red-500 text-white flex items-center justify-center shadow-xl"
             >
               {isRecording ? (
                 <FaMicrophone size={24} />
@@ -715,18 +731,18 @@ useEffect(() => {
                     duration: 1.5,
                     repeat: Infinity,
                   }}
-                  className="absolute inset-0 rounded-full border-4 border-black"
+                  className="absolute inset-0 rounded-full border-2 border-red-500"
                 />
               )}
             </motion.button>
 
             {/* Submit Button */}
             <motion.button
-              whileHover={{ scale: 1.02 }}
+              whileHover={{ scale: 1.01 }}
               whileTap={{ scale: 0.98 }}
               onClick={submitAnswer}
               disabled={!hasQuestions || isSubmmiting}
-              className="flex-1 h-14 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold shadow-lg disabled:opacity-50"
+              className="flex-1 h-14 rounded-2xl bg-black hover:bg-gray-900 cursor-pointer text-white font-semibold shadow-lg disabled:opacity-50"
             >
               {isSubmmiting
                 ? "Submitting..."

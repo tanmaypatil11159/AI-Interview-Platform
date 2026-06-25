@@ -38,17 +38,39 @@ function InterviewReport() {
 
     fetchReport();
   }, [id]);
-
+  
   const downloadPDF = async () => {
+    
+      const elements = reportRef.current.querySelectorAll("*");
+    
+    elements.forEach((el) => {
+      const style = window.getComputedStyle(el);
+    
+      if (style.backgroundColor.includes("oklch")) {
+        el.style.backgroundColor = "#ffffff";
+      }
+    
+      if (style.color.includes("oklch")) {
+        el.style.color = "#111827";
+      }
+    
+      if (style.borderColor.includes("oklch")) {
+        el.style.borderColor = "#e5e7eb";
+      }
+    });
     if (!reportRef.current) return;
 
     try {
-      const canvas = await html2canvas(reportRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#f5faf8",
-        scrollY: -window.scrollY,
-      });
+const canvas = await html2canvas(reportRef.current, {
+  scale: 2,
+  useCORS: true,
+  allowTaint: true,
+  backgroundColor: "#ffffff",
+  scrollX: 0,
+  scrollY: 0,
+  windowWidth: document.documentElement.scrollWidth,
+  windowHeight: document.documentElement.scrollHeight,
+});
 
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
@@ -121,13 +143,16 @@ function InterviewReport() {
 
           <button
             onClick={downloadPDF}
-            className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700"
+            className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-white shadow-lg  transition hover:bg-emerald-700"
           >
             <Download size={18} /> Download PDF
           </button>
         </div>
 
-        <div ref={reportRef} className="space-y-6">
+        <div
+  ref={reportRef}
+  className="space-y-6 bg-white p-6"
+>
           <div className="grid gap-6 lg:grid-cols-12">
             <div className="lg:col-span-4 space-y-6">
               <div className="rounded-3xl bg-white p-6 shadow-sm">
