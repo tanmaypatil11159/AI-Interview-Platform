@@ -8,7 +8,7 @@ import { FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
 
 function Step2({ interviewData, onFinish }) {
 
-  const { interviewId, questions = [], userName } = interviewData || {};
+  const { interviewId, questions = [], userName, mode } = interviewData || {};
   const [isIntroPhase, setIsIntroPhase] = useState(true);
   const recognitionRef = useRef(null);
   const finalTranscriptRef = useRef("");
@@ -19,7 +19,7 @@ function Step2({ interviewData, onFinish }) {
   const [timeLeft, setTimeLeft] = useState(60);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [isSubmmiting, setIsSubmmiting] = useState(false);
-  const voiceGender = "male";
+  const voiceGender =  "male";
   setTimeout(()=>{
     voiceGender = "male"
   },1000)
@@ -201,15 +201,21 @@ useEffect(() => {
   const runIntro = async () => {
     if (!isIntroPhase) return;
 
-    await speakText(
-      `Hi ${userName}, I am ${
-        voiceGender === "male" ? "David" : "Jennie"
-      }. It's great to meet you today. I hope you're feeling confident and ready.`
-    );
+await speakText(
+  `Hi ${userName}, I am ${
+    voiceGender === "male" ? "David" : "Jennie"
+  }. It's great to meet you today. I hope you're feeling confident and ready.`
+);
 
-    await speakText(
-      "I'll ask you a few questions. Just answer naturally, one at a time. Let's begin."
-    );
+if (mode === "Technical") {
+  await speakText(
+    "Today we'll be conducting a technical interview. I'll ask you questions related to your technical knowledge, problem-solving skills, and project experience. Take your time, explain your thought process clearly, and answer each question one at a time. Let's begin."
+  );
+} else {
+  await speakText(
+    "Today we'll be conducting an HR interview. I'll ask you questions about your background, communication skills, teamwork, career goals, and professional experiences. Answer naturally and be yourself. Let's begin."
+  );
+}
 
     setIsIntroPhase(false);
 
@@ -292,8 +298,9 @@ useEffect(() => {
       if (result.data.feedback) {
         await speakText(result.data.feedback);
       }
-
+      
       if (currentIndex === totalQuestions - 1) {
+        await speakText("That concludes our interview. Thank you for taking the time to speak with me today. I appreciate your thoughtful responses and the effort you put into each question. Your interview has been successfully completed, and your performance report is now being generated. I wish you all the best in your future endeavors. Have a great day!");
         await finishInterview();
       } else {
 setTimeout(async () => {

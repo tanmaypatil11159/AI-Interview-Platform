@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, useMotionValue, useAnimationFrame, useTransform } from "framer-motion";
 import Navbar from "../components/Navbar";
 import AuthModel from "../components/AuthModel";
-import { Sparkles, BriefcaseBusiness, Mic, Clock3 } from "lucide-react";
+import { Sparkles, BriefcaseBusiness, Mic, Clock3, Code2, Users, Brain } from "lucide-react";
 import Footer from "../components/Footer";
 import { useNavigate } from "react-router-dom";
 import FAQSection from "../components/FAQsection";
@@ -71,29 +71,26 @@ function Home() {
 
   const xPos = useTransform(x, (v) => `${v}%`);
 
-  const steps = [
-    {
-      icon: BriefcaseBusiness,
-      step: "STEP 1",
-      title: "Role & Experience Selection",
-      desc: "AI adjusts difficulty based on selected job role.",
-      featured: false,
-    },
-    {
-      icon: Mic,
-      step: "STEP 2",
-      title: "Smart Voice Interview",
-      desc: "Dynamic follow-up questions based on your answers.",
-      featured: true,
-    },
-    {
-      icon: Clock3,
-      step: "STEP 3",
-      title: "Timer Based Simulation",
-      desc: "Real interview pressure with time tracking.",
-      featured: false,
-    },
-  ];
+const steps = [
+  {
+    icon: Code2,
+    step: "Technical Interview",
+    title: "Technical Assessment",
+    desc: "Demonstrate your programming knowledge through questions on Data Structures, Algorithms, OOP, DBMS, Operating Systems, Computer Networks, and your project experience. Receive detailed AI feedback on every response.",
+  },
+  {
+    icon: Users,
+    step: "HR Interview",
+    title: "Human Resources Interview",
+    desc: "Practice real HR interview questions covering communication, teamwork, strengths, weaknesses, leadership, career goals, workplace behavior, and confidence to prepare for your final interview round.",
+  },
+  {
+    icon: Brain,
+    step: "AI Evaluation",
+    title: "Performance Analysis",
+    desc: "Our AI evaluates every answer for confidence, communication, technical accuracy, and correctness, then generates a detailed performance report with personalized improvement suggestions.",
+  },
+];
 
   return (
     <div className="min-h-screen bg-[#f8f8f8] overflow-hidden">
@@ -163,7 +160,7 @@ function Home() {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            className="bg-black text-white px-8 py-3 rounded-full"
+            className="cursor-pointer bg-black text-white px-8 py-3 rounded-full"
           >
             Start Interview
           </motion.button>
@@ -173,7 +170,7 @@ function Home() {
             whileHover={{ scale: 1.05, backgroundColor: "#f3f4f6" }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            className="border border-gray-300 bg-white px-8 py-3 rounded-full"
+            className="cursor-pointer border border-gray-300 bg-white px-8 py-3 rounded-full"
           >
             View History
           </motion.button>

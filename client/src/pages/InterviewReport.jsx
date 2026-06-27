@@ -172,6 +172,16 @@ const canvas = await html2canvas(reportRef.current, {
               </div>
 
               <div className="rounded-3xl bg-white p-6 shadow-sm">
+                <h2 className="text-lg font-semibold text-gray-700">Interview Mode</h2>
+                <div className="mt-8 flex items-center justify-center">
+<span className="text-3xl font-bold text-emerald-700 capitalize">
+  {report.mode === "HR" ? "Human Resources (HR)" : "Technical"}
+</span>                  
+                </div>
+                
+              </div>
+
+              <div className="rounded-3xl bg-white p-6 shadow-sm">
                 <h2 className="text-lg font-semibold text-gray-700">Skill Summary</h2>
                 <div className="mt-6 space-y-4">
                   {skillData.map((item) => (

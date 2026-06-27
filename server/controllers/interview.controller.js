@@ -132,28 +132,69 @@ Resume: ${safeResume}
 `;
 
         const messages = [
-            {
-                role: "system",
-                content: `
-You are a real human interviewer conducting a professional interview.
+            mode === 'Technical' ? (
 
-Generate exactly 5 interview questions.
+                  {
+    role: "system",
+    content: `
+You are a senior software engineer conducting a real technical interview.
+
+Generate exactly 8 interview questions.
 
 Rules:
 - One question per line.
 - No numbering.
+- No bullet points.
 - No explanations.
-- No extra text.
-- Questions should be realistic.
+- No greetings or extra text.
+- Questions must sound like a real interviewer.
+- Focus only on technical knowledge relevant to the role.
+- Include questions about programming concepts, problem solving, projects, best practices, and role-specific technologies.
+- Avoid asking multiple questions in a single line.
 - Difficulty should increase gradually.
 
 Question 1 → Easy
 Question 2 → Easy
-Question 3 → Medium
+Question 3 → Easy
 Question 4 → Medium
-Question 5 → Hard
+Question 5 → Medium
+Question 6 → Medium
+Question 7 → Hard
+Question 8 → Hard
 `,
-            },
+  }
+
+            ) : (
+                {
+    role: "system",
+    content: `
+You are an experienced HR interviewer conducting a professional HR interview.
+
+Generate exactly 8 interview questions.
+
+Rules:
+- One question per line.
+- No numbering.
+- No bullet points.
+- No explanations.
+- No greetings or extra text.
+- Questions should evaluate communication, confidence, personality, teamwork, leadership, adaptability, career goals, and workplace behavior.
+- Avoid technical questions.
+- Avoid asking multiple questions in a single line.
+- Difficulty should increase gradually.
+
+Question 1 → Easy
+Question 2 → Easy
+Question 3 → Easy
+Question 4 → Medium
+Question 5 → Medium
+Question 6 → Medium
+Question 7 → Hard
+Question 8 → Hard
+`,
+  }
+
+            ),
             {
                 role: "user",
                 content: userPrompt,
@@ -172,7 +213,7 @@ Question 5 → Hard
             .split("\n")
             .map((q) => q.trim())
             .filter(Boolean)
-            .slice(0, 5);
+            .slice(0, 8);
 
         if (!questionsArray.length) {
             return res.status(500).json({
@@ -191,8 +232,8 @@ Question 5 → Hard
             resumeText: safeResume,
             questions: questionsArray.map((q, index) => ({
                 question: q,
-                difficulty: ["easy", "easy", "medium", "medium", "hard"][index],
-                timeLimit: [60, 60, 90, 90, 120][index],
+                difficulty: ["easy", "easy", "easy", "medium", "medium", "medium", "hard", "hard"][index],
+                timeLimit: [60, 60, 60, 90, 90, 90, 120, 120][index],
             })),
         });
 
@@ -421,85 +462,87 @@ export const getMyInterview = async (req, res) => {
 }
 
 export const getInterviewReport = async (req, res) => {
-  try {
-    const interview = await Interview.findById(req.params.id);
+    try {
+        const interview = await Interview.findById(req.params.id);
 
-    if (!interview) {
-      return res.status(404).json({
-        message: "Interview not found.",
-      });
+        if (!interview) {
+            return res.status(404).json({
+                message: "Interview not found.",
+            });
+        }
+
+        const totalQuestions = interview.questions?.length || 0;
+
+        let totalConfidence = 0;
+        let totalCommunication = 0;
+        let totalCorrectness = 0;
+        let totalTechnical = 0;
+
+        interview.questions.forEach((q) => {
+            totalConfidence += q.confidence || 0;
+            totalCommunication += q.communication || 0;
+            totalCorrectness += q.correctness || 0;
+            totalTechnical += q.technical || 0;
+        });
+
+        const averageConfidence =
+            totalQuestions > 0
+                ? totalConfidence / totalQuestions
+                : 0;
+
+        const averageCommunication =
+            totalQuestions > 0
+                ? totalCommunication / totalQuestions
+                : 0;
+
+        const averageCorrectness =
+            totalQuestions > 0
+                ? totalCorrectness / totalQuestions
+                : 0;
+
+        const averageTechnical =
+            totalQuestions > 0
+                ? totalTechnical / totalQuestions
+                : 0;
+
+        const finalScore = interview.finalScore || 0;
+
+        return res.status(200).json({
+            finalScore: Number(finalScore.toFixed(1)),
+
+            confidence: Number(
+                averageConfidence.toFixed(1)
+            ),
+
+            communication: Number(
+                averageCommunication.toFixed(1)
+            ),
+
+            correctness: Number(
+                averageCorrectness.toFixed(1)
+            ),
+
+            technical: Number(
+                averageTechnical.toFixed(1)
+            ),
+
+            mode: interview.mode,
+
+            questionWiseScore: interview.questions.map((q) => ({
+                question: q.question,
+                answer: q.answer,
+                score: q.score || 0,
+                feedback: q.feedback || "",
+                confidence: q.confidence || 0,
+                communication: q.communication || 0,
+                correctness: q.correctness || 0,
+                technical: q.technical || 0,
+            })),
+        });
+    } catch (e) {
+        console.error("Interview Report Error:", e);
+        return res.status(500).json({
+            message: e.message,
+        });
     }
-
-    const totalQuestions = interview.questions?.length || 0;
-
-    let totalConfidence = 0;
-    let totalCommunication = 0;
-    let totalCorrectness = 0;
-    let totalTechnical = 0;
-
-    interview.questions.forEach((q) => {
-      totalConfidence += q.confidence || 0;
-      totalCommunication += q.communication || 0;
-      totalCorrectness += q.correctness || 0;
-      totalTechnical += q.technical || 0;
-    });
-
-    const averageConfidence =
-      totalQuestions > 0
-        ? totalConfidence / totalQuestions
-        : 0;
-
-    const averageCommunication =
-      totalQuestions > 0
-        ? totalCommunication / totalQuestions
-        : 0;
-
-    const averageCorrectness =
-      totalQuestions > 0
-        ? totalCorrectness / totalQuestions
-        : 0;
-
-    const averageTechnical =
-      totalQuestions > 0
-        ? totalTechnical / totalQuestions
-        : 0;
-
-    const finalScore = interview.finalScore || 0;
-
-    return res.status(200).json({
-      finalScore: Number(finalScore.toFixed(1)),
-
-      confidence: Number(
-        averageConfidence.toFixed(1)
-      ),
-
-      communication: Number(
-        averageCommunication.toFixed(1)
-      ),
-
-      correctness: Number(
-        averageCorrectness.toFixed(1)
-      ),
-
-      technical: Number(
-        averageTechnical.toFixed(1)
-      ),
-
-      questionWiseScore: interview.questions.map((q) => ({
-        question: q.question,
-        answer: q.answer,
-        score: q.score || 0,
-        feedback: q.feedback || "",
-        confidence: q.confidence || 0,
-        communication: q.communication || 0,
-        correctness: q.correctness || 0,
-        technical: q.technical || 0,
-      })),
-    });
-  } catch (e) {
-    console.error("Interview Report Error:", e);
-    return res.status(500).json({
-      message: e.message,
-    });
-  }
 };
