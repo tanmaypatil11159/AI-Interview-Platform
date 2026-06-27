@@ -24,6 +24,7 @@ function Step2({ interviewData, onFinish }) {
   const [timerRunning, setTimerRunning] = useState(false);
   const timerTriggeredRef = useRef(false);
   const [interviewStarted, setInterviewStarted] = useState(false);
+  const [startError, setStartError] = useState("");
 
   const videoRef = useRef(null)
   const currentQuestion = questions[currentIndex]
@@ -139,6 +140,10 @@ function Step2({ interviewData, onFinish }) {
       if (voices.length > 0) {
         setSelectedVoice(selectedVoiceCandidate || voices[0]);
       }
+
+      if (voices.length === 0) {
+        setStartError("Voice setup is still loading. Please try again in a moment.");
+      }
     };
 
     loadVoices();
@@ -196,8 +201,25 @@ function Step2({ interviewData, onFinish }) {
   }, [selectedVoice, voiceGender]);
 
   const startInterview = useCallback(async () => {
-    if (interviewStarted || !selectedVoice) return;
+    if (interviewStarted) return;
 
+    if (!window.speechSynthesis || typeof window.speechSynthesis.speak !== "function") {
+      setStartError("Speech synthesis is not available in this browser.");
+      return;
+    }
+
+    const voices = window.speechSynthesis.getVoices();
+
+    if (!selectedVoice && voices.length > 0) {
+      setSelectedVoice(voices[0]);
+    }
+
+    if (!selectedVoice) {
+      setStartError("Voice setup is still loading. Please try again in a moment.");
+      return;
+    }
+
+    setStartError("");
     setInterviewStarted(true);
 
     await speakText(
@@ -589,6 +611,19 @@ useEffect(() => {
           transition={{ duration: 0.7 }}
           className="relative bg-white rounded-3xl shadow-sm p-6 flex flex-col"
         >
+          {!interviewStarted && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-3xl bg-black/40 backdrop-blur-sm">
+              <button
+                onClick={startInterview}
+                className="rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-700"
+              >
+                Start Interview
+              </button>
+              {startError && (
+                <p className="max-w-xs text-center text-sm text-white">{startError}</p>
+              )}
+            </div>
+          )}
           
           <motion.h1
             initial={{ y: -20 }}
