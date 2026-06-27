@@ -9,9 +9,18 @@ export const AnalyzeResume = async (req, res) => {
         if (!req.file) {
             return res.status(400).json({ message: "Resume pdf is required" });
         }
+
+        let fileBuffer;
         const filePath = req.file.path;
 
-        const fileBuffer = await fs.promises.readFile(filePath);
+        if (req.file.buffer && req.file.buffer.length) {
+            fileBuffer = Buffer.from(req.file.buffer);
+        } else if (filePath) {
+            fileBuffer = await fs.promises.readFile(filePath);
+        } else {
+            return res.status(400).json({ message: "Resume file content is empty" });
+        }
+
         const uint8Array = new Uint8Array(fileBuffer);
 
         const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
@@ -53,7 +62,10 @@ export const AnalyzeResume = async (req, res) => {
         const aiResponce = await askAi(messages);
         console.log(messages)
         const parsed = JSON.parse(aiResponce)
-        fs.unlinkSync(filePath)
+
+        if (filePath && fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+        }
 
         res.json({
             role: parsed.role,
@@ -65,7 +77,7 @@ export const AnalyzeResume = async (req, res) => {
     } catch (error) {
         console.log(error)
 
-        if (req.file && fs.existsSync(req.file.path)) {
+        if (req.file?.path && fs.existsSync(req.file.path)) {
             fs.unlinkSync(req.file.path);
         }
 
