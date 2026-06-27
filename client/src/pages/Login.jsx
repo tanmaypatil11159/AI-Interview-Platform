@@ -29,7 +29,12 @@ function Login() {
         withCredentials: true,
       });
 
-      dispatch(setUserData(result.data));
+      const user = result.data?.user || result.data;
+      if (result.data?.token) {
+        localStorage.setItem("token", result.data.token);
+      }
+
+      dispatch(setUserData(user));
       
       if (result.status === 200) {
         console.log("Login successful:", result.data);

@@ -31,6 +31,7 @@ function Navbar({ onLoginClick }) {
         }
       );
 
+      localStorage.removeItem("token");
       dispatch(setUserData(null));
 
       setShowCreditsPopup(false);

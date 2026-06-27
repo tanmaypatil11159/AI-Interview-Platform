@@ -15,11 +15,11 @@ export const googleAuth = async (req, res) => {
         res.cookie("token", token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
+            sameSite: "lax",
             maxAge: 7 * 24 * 60 * 60 * 1000,
         });
 
-        return res.status(200).json( user );
+        return res.status(200).json({ user, token });
     } catch (error) {
         console.error("Google authentication error:", error);
         res.status(500).json({ message: "Internal server error" });
