@@ -589,16 +589,7 @@ useEffect(() => {
           transition={{ duration: 0.7 }}
           className="relative bg-white rounded-3xl shadow-sm p-6 flex flex-col"
         >
-          {!interviewStarted && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-3xl bg-black/40 backdrop-blur-sm">
-              <button
-                onClick={startInterview}
-                className="rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-700"
-              >
-                Start Interview
-              </button>
-            </div>
-          )}
+          
           <motion.h1
             initial={{ y: -20 }}
             animate={{ y: 0 }}
