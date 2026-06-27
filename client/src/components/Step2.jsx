@@ -23,6 +23,7 @@ function Step2({ interviewData, onFinish }) {
   const [subtitle, setSubtitle] = useState("");
   const [timerRunning, setTimerRunning] = useState(false);
   const timerTriggeredRef = useRef(false);
+  const [interviewStarted, setInterviewStarted] = useState(false);
 
   const videoRef = useRef(null)
   const currentQuestion = questions[currentIndex]
@@ -154,6 +155,7 @@ function Step2({ interviewData, onFinish }) {
       }
 
       window.speechSynthesis.cancel();
+      window.speechSynthesis.resume?.();
 
       const humanText = text
         .replace(/,/g, ", ... ")
@@ -173,7 +175,7 @@ function Step2({ interviewData, onFinish }) {
 
         if (videoRef.current) {
           videoRef.current.currentTime = 0;
-          videoRef.current.play();
+          videoRef.current.play().catch(() => {});
         }
       };
 
@@ -192,49 +194,40 @@ function Step2({ interviewData, onFinish }) {
       window.speechSynthesis.speak(utterance);
     });
   }, [selectedVoice, voiceGender]);
-useEffect(() => {
-  if (!selectedVoice) return;
 
-  const runIntro = async () => {
-    if (!isIntroPhase) return;
+  const startInterview = useCallback(async () => {
+    if (interviewStarted || !selectedVoice) return;
 
-await speakText(
-  `Hi ${userName}, I am ${
-    voiceGender === "male" ? "David" : "Jennie"
-  }. It's great to meet you today. I hope you're feeling confident and ready.`
-);
+    setInterviewStarted(true);
 
-if (mode === "Technical") {
-  await speakText(
-    "Today we'll be conducting a technical interview. I'll ask you questions related to your technical knowledge, problem-solving skills, and project experience. Take your time, explain your thought process clearly, and answer each question one at a time. Let's begin."
-  );
-} else {
-  await speakText(
-    "Today we'll be conducting an HR interview. I'll ask you questions about your background, communication skills, teamwork, career goals, and professional experiences. Answer naturally and be yourself. Let's begin."
-  );
-}
+    await speakText(
+      `Hi ${userName}, I am ${
+        voiceGender === "male" ? "David" : "Jennie"
+      }. It's great to meet you today. I hope you're feeling confident and ready.`
+    );
+
+    if (mode === "Technical") {
+      await speakText(
+        "Today we'll be conducting a technical interview. I'll ask you questions related to your technical knowledge, problem-solving skills, and project experience. Take your time, explain your thought process clearly, and answer each question one at a time. Let's begin."
+      );
+    } else {
+      await speakText(
+        "Today we'll be conducting an HR interview. I'll ask you questions about your background, communication skills, teamwork, career goals, and professional experiences. Answer naturally and be yourself. Let's begin."
+      );
+    }
 
     setIsIntroPhase(false);
 
     if (questions?.length > 0) {
       setCurrentIndex(0);
 
-      await speakText(
-        questions[0]?.question
-      );
+      await speakText(questions[0]?.question);
 
-      setTimeLeft(
-        questions[0]?.timeLimit || 60
-      );
-
+      setTimeLeft(questions[0]?.timeLimit || 60);
       setTimerRunning(true);
-
       toggleRecording();
     }
-  };
-
-  runIntro();
-}, [selectedVoice, isIntroPhase, questions, userName, voiceGender, speakText, toggleRecording]);
+  }, [interviewStarted, mode, questions, selectedVoice, speakText, toggleRecording, userName, voiceGender]);
 
   useEffect(() => {
     const loadVoices = () => {
@@ -388,6 +381,8 @@ useEffect(() => {
           >
             <video
               ref={videoRef}
+              autoPlay
+              loop
               muted
               playsInline
               preload="auto"
@@ -592,8 +587,18 @@ useEffect(() => {
           initial={{ x: 80, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.7 }}
-          className="bg-white rounded-3xl shadow-sm p-6 flex flex-col"
+          className="relative bg-white rounded-3xl shadow-sm p-6 flex flex-col"
         >
+          {!interviewStarted && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-3xl bg-black/40 backdrop-blur-sm">
+              <button
+                onClick={startInterview}
+                className="rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-700"
+              >
+                Start Interview
+              </button>
+            </div>
+          )}
           <motion.h1
             initial={{ y: -20 }}
             animate={{ y: 0 }}
