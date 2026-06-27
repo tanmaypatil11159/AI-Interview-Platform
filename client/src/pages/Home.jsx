@@ -5,7 +5,7 @@ import AuthModel from "../components/AuthModel";
 import { Sparkles, BriefcaseBusiness, Mic, Clock3, Code2, Users, Brain } from "lucide-react";
 import Footer from "../components/Footer";
 import { useNavigate } from "react-router-dom";
-import FAQSection from "../components/FAQsection";
+import FAQSection from "../components/FAQSection";
 import { TypeAnimation } from "react-type-animation";
 import InfiniteCardGallery from "../components/InfiniteCardGallery";
 const heroContainer = {
