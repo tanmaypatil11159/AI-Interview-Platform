@@ -143,7 +143,7 @@ const canvas = await html2canvas(reportRef.current, {
 
           <button
             onClick={downloadPDF}
-            className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-white shadow-lg  transition hover:bg-emerald-700"
+            className="cursor-pointer inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-5 py-3 text-white shadow-lg  transition hover:bg-emerald-700"
           >
             <Download size={18} /> Download PDF
           </button>
