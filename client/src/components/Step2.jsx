@@ -19,10 +19,7 @@ function Step2({ interviewData, onFinish }) {
   const [timeLeft, setTimeLeft] = useState(60);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [isSubmmiting, setIsSubmmiting] = useState(false);
-  const voiceGender =  "female";
-  setTimeout(()=>{
-    voiceGender = "male"
-  },1000)
+  const voiceGender =  "male";
   const [subtitle, setSubtitle] = useState("");
   const [timerRunning, setTimerRunning] = useState(false);
   const timerTriggeredRef = useRef(false);
