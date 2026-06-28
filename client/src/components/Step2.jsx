@@ -89,7 +89,10 @@ function Step2({ interviewData, onFinish }) {
 
   // Timer interval ref to prevent multiple interval timers
   const timerIntervalRef = useRef(null);
-  
+
+  // Keep-alive interval ref for speech synthesis
+  const speechKeepAliveRef = useRef(null);
+
   // Track restart attempts to prevent infinite loops
   const restartAttemptsRef = useRef(0);
   const MAX_RESTART_ATTEMPTS = 3;
@@ -536,13 +539,24 @@ function Step2({ interviewData, onFinish }) {
           setSubtitle(text);
         }
 
-        // Reset and start avatar video
+        // Reset and start avatar video with looping
         if (videoRef.current) {
           videoRef.current.currentTime = 0;
+          videoRef.current.loop = true;
           videoRef.current.play().catch((err) => {
             console.warn("⚠️ Could not play avatar video:", err);
           });
         }
+
+        // Keep speech synthesis alive to prevent pausing
+        speechKeepAliveRef.current = setInterval(() => {
+          if (!isAISpeakingRef.current) {
+            clearInterval(speechKeepAliveRef.current);
+            return;
+          }
+          window.speechSynthesis.pause();
+          window.speechSynthesis.resume();
+        }, 14000); // Just under 15 seconds, which is a common timeout
       };
 
       // ========================================================================
@@ -551,6 +565,12 @@ function Step2({ interviewData, onFinish }) {
       utterance.onend = () => {
         console.log("🔊 AI finished speaking");
         isAISpeakingRef.current = false;
+        // Clear the keep-alive interval
+        if (speechKeepAliveRef.current) {
+          clearInterval(speechKeepAliveRef.current);
+          speechKeepAliveRef.current = null;
+        }
+
         if (isMountedRef.current) {
           setIsAIPlaying(false);
           setSubtitle("");
@@ -558,6 +578,7 @@ function Step2({ interviewData, onFinish }) {
 
         // Pause and reset avatar video
         if (videoRef.current) {
+          videoRef.current.loop = false;
           videoRef.current.pause();
           videoRef.current.currentTime = 0;
         }
@@ -571,6 +592,12 @@ function Step2({ interviewData, onFinish }) {
       utterance.onerror = (event) => {
         console.error("❌ Speech synthesis error:", event.error);
         isAISpeakingRef.current = false;
+        // Clear the keep-alive interval
+        if (speechKeepAliveRef.current) {
+          clearInterval(speechKeepAliveRef.current);
+          speechKeepAliveRef.current = null;
+        }
+
         if (isMountedRef.current) {
           setIsAIPlaying(false);
           setSubtitle("");
@@ -638,7 +665,7 @@ function Step2({ interviewData, onFinish }) {
       await speakText(
         "Today we'll be conducting a technical interview. I'll ask you questions related to your technical knowledge, problem-solving skills, and project experience. Take your time, explain your thought process clearly, and answer each question one at a time. Let's begin."
       );
-    } else if (mode === "HR"){
+    } else {
       await speakText(
         "Today we'll be conducting an HR interview. I'll ask you questions about your background, communication skills, teamwork, career goals, and professional experiences. Answer naturally and be yourself. Let's begin."
       );
@@ -820,8 +847,12 @@ function Step2({ interviewData, onFinish }) {
       console.log("🧹 Component unmounting - cleaning up all resources");
       isMountedRef.current = false;
       
-      // Stop speech synthesis
+      // Stop speech synthesis and clear keep-alive interval
       window.speechSynthesis.cancel();
+      if (speechKeepAliveRef.current) {
+        clearInterval(speechKeepAliveRef.current);
+        speechKeepAliveRef.current = null;
+      }
 
       // Stop recognition
       if (recognitionRef.current) {

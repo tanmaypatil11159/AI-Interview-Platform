@@ -253,6 +253,7 @@ Question 8 → Hard
             interviewId: interview._id,
             creditsLeft: user.credits,
             userName: user.name,
+            mode: interview.mode,
             questions: interview.questions,
         });
     } catch (error) {
