@@ -473,9 +473,6 @@ function Step2({ interviewData, onFinish }) {
         voiceGender === "female" ? 1.05 : 0.9;
       utterance.volume = 1;
 
-      // ========================================================================
-      // UTERANCE: onstart - AI speech has begun
-      // ========================================================================
       utterance.onstart = () => {
         console.log("🔊 AI started speaking");
         if (isMountedRef.current) {
@@ -503,9 +500,6 @@ function Step2({ interviewData, onFinish }) {
         }, 14000); // Just under 15 seconds, which is a common timeout
       };
 
-      // ========================================================================
-      // UTERANCE: onend - AI speech has finished
-      // ========================================================================
       utterance.onend = () => {
         console.log("🔊 AI finished speaking");
         isAISpeakingRef.current = false;
@@ -530,13 +524,9 @@ function Step2({ interviewData, onFinish }) {
         resolve();
       };
 
-      // ========================================================================
-      // UTERANCE: onerror - Speech synthesis error
-      // ========================================================================
       utterance.onerror = (event) => {
         console.error("❌ Speech synthesis error:", event.error);
         isAISpeakingRef.current = false;
-        // Clear the keep-alive interval
         if (speechKeepAliveRef.current) {
           clearInterval(speechKeepAliveRef.current);
           speechKeepAliveRef.current = null;
@@ -549,44 +539,35 @@ function Step2({ interviewData, onFinish }) {
         resolve();
       };
 
-      // Speak the text
       window.speechSynthesis.speak(utterance);
     });
   }, [selectedVoice, voiceGender, stopRecognition]);
 
-  // ============================================================================
-  // START INTERVIEW - FULL SEQUENCE
-  // ============================================================================
   const startInterview = useCallback(async () => {
     if (interviewStarted) return;
 
     console.log("🚀 Starting interview...");
 
-    // 1. Check if SpeechRecognition is available
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
       setStartError("Speech recognition is not supported in this browser. Please use Chrome, Edge, or Brave.");
       return;
     }
 
-    // 2. Check if SpeechSynthesis is available
     if (!window.speechSynthesis || typeof window.speechSynthesis.speak !== "function") {
       setStartError("Speech synthesis is not available in this browser.");
       return;
     }
 
-    // 3. Check if voices are loaded
     if (!voicesLoaded || !selectedVoice) {
       setStartError("Voice setup is still loading. Please try again in a moment.");
       return;
     }
 
-    // 4. Request microphone permission explicitly
     try {
       console.log("🎤 Requesting microphone permission...");
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       
-      // Immediately stop the stream - we just needed permission
       stream.getTracks().forEach(track => track.stop());
       console.log("✅ Microphone permission granted");
     } catch (err) {
@@ -599,7 +580,6 @@ function Step2({ interviewData, onFinish }) {
     setInterviewStarted(true);
     console.log("✅ Interview started");
 
-    // 5. AI Introduction
     await speakText(
       `Hi ${userName}, I am ${voiceGender === "male" ? "David" : "Jennie"
       }. It's great to meet you today. I hope you're feeling confident and ready.`
@@ -617,36 +597,26 @@ function Step2({ interviewData, onFinish }) {
 
     setIsIntroPhase(false);
 
-    // 6. First question flow
     if (questions?.length > 0) {
       setCurrentIndex(0);
       
-      // AI speaks first question
       await speakText(questions[0]?.question);
 
-      // 7. Wait 400ms after AI finishes speaking before starting anything
       console.log("⏳ Waiting 400ms after AI speech...");
       await new Promise(r => setTimeout(r, 400));
 
-      // 8. Clear transcript before starting timer/recording
       clearTranscript();
 
-      // 9. Reset and start timer
       setTimeLeft(questions[0]?.timeLimit || 60);
       setTimerRunning(true);
       timerTriggeredRef.current = false;
 
-      // 10. Start recognition
       startRecognition();
     }
   }, [interviewStarted, mode, questions, selectedVoice, speakText, userName, voiceGender, startRecognition, clearTranscript, voicesLoaded]);
 
-  // ============================================================================
-  // TIMER - RELIABLE SETINTERVAL WITH REF
-  // ============================================================================
   useEffect(() => {
     if (!timerRunning || !hasQuestions) {
-      // Clear interval if timer not running
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
         timerIntervalRef.current = null;
@@ -654,7 +624,6 @@ function Step2({ interviewData, onFinish }) {
       return;
     }
 
-    // Start interval
     timerIntervalRef.current = setInterval(() => {
       setTimeLeft((prevTimeLeft) => {
         if (prevTimeLeft <= 1 && !timerTriggeredRef.current) {
@@ -783,9 +752,6 @@ function Step2({ interviewData, onFinish }) {
     }
   }, [answer, currentIndex, currentQuestion, finishInterview, interviewId, isSubmmiting, questions, speakText, timeLeft, totalQuestions, stopRecognition, startRecognition, clearTranscript]);
 
-  // ============================================================================
-  // COMPONENT UNMOUNT CLEANUP
-  // ============================================================================
   useEffect(() => {
     return () => {
       console.log("🧹 Component unmounting - cleaning up all resources");
@@ -815,9 +781,6 @@ function Step2({ interviewData, onFinish }) {
     };
   }, []);
 
-  // ============================================================================
-  // JSX RENDER
-  // ============================================================================
   return (
     <motion.div
       initial={{ opacity: 0 }}
