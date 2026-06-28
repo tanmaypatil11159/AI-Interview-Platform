@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ServerUrl } from '../utils/constants';
 
-const Step1 = () => {
+const Step1 = ({ onStart }) => {
   const [jobRole, setJobRole] = useState('');
   const [jobDescription, setJobDescription] = useState('');
   const [jobExperience, setJobExperience] = useState('');
@@ -61,7 +61,7 @@ const Step1 = () => {
       );
 
       if (res.data.success && res.data.creditsLeft > 0) {
-        navigate(`/interview/${res.data.interviewId}`);
+        onStart(res.data);
       } else if (res.data.success && res.data.creditsLeft <= 0) {
         setShowCreditsModal(true);
       }
