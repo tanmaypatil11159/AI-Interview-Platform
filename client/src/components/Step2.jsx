@@ -638,7 +638,7 @@ function Step2({ interviewData, onFinish }) {
       await speakText(
         "Today we'll be conducting a technical interview. I'll ask you questions related to your technical knowledge, problem-solving skills, and project experience. Take your time, explain your thought process clearly, and answer each question one at a time. Let's begin."
       );
-    } else {
+    } else if (mode === "HR"){
       await speakText(
         "Today we'll be conducting an HR interview. I'll ask you questions about your background, communication skills, teamwork, career goals, and professional experiences. Answer naturally and be yourself. Let's begin."
       );

@@ -39,7 +39,7 @@ function Step1({ onStart }) {
 
   const [role, setRole] = useState("");
   const [experience, setExperience] = useState("");
-  const [mode, setMode] = useState("Technical");
+  const [mode, setMode] = useState("");
   const [resumeFile, setResumeFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [projects, setProjects] = useState([]);
