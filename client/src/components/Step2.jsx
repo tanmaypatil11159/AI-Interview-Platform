@@ -1221,87 +1221,12 @@ function Step2({ interviewData, onFinish }) {
                   <h3 className="font-bold text-lg text-emerald-700">
                     Interview Feedback
                   </h3>
-
-                  <span className="text-xs px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 font-semibold">
-                    Score: {feedbackData.finalScore}/10
-                  </span>
                 </div>
 
                 {/* Short Summary */}
                 <p className="text-gray-800 font-medium">
                   {feedbackData.feedback}
                 </p>
-
-                {/* Scores Grid */}
-                <div className="grid grid-cols-2 gap-3 mt-3">
-                  <div className="bg-white p-3 rounded-xl shadow-sm">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-semibold text-gray-700">
-                        Confidence
-                      </span>
-                      <span className="text-emerald-600 font-bold">
-                        {feedbackData.confidence}/10
-                      </span>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                        style={{ width: `${(feedbackData.confidence/10)*100}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-xl shadow-sm">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-semibold text-gray-700">
-                        Communication
-                      </span>
-                      <span className="text-emerald-600 font-bold">
-                        {feedbackData.communication}/10
-                      </span>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                        style={{ width: `${(feedbackData.communication/10)*100}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-xl shadow-sm">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-semibold text-gray-700">
-                        Correctness
-                      </span>
-                      <span className="text-emerald-600 font-bold">
-                        {feedbackData.correctness}/10
-                      </span>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                        style={{ width: `${(feedbackData.correctness/10)*100}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-white p-3 rounded-xl shadow-sm">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-sm font-semibold text-gray-700">
-                        Technical
-                      </span>
-                      <span className="text-emerald-600 font-bold">
-                        {feedbackData.technical}/10
-                      </span>
-                    </div>
-                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-                        style={{ width: `${(feedbackData.technical/10)*100}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
 
                 {/* Detailed Feedback Sections */}
                 <div className="space-y-3 mt-4">
