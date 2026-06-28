@@ -6,49 +6,16 @@ import femaleVideo from "../assets/female-ai.mp4";
 import maleVideo from "../assets/male-ai.mp4";
 import { FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
 
-/**
- * ============================================================================
- * AI SMART INTERVIEW COMPONENT - PRODUCTION-READY VERSION
- * ============================================================================
- * 
- * CRITICAL ARCHITECTURE FIXES:
- * 1. ✅ Single SpeechRecognition instance for entire lifecycle (never recreated)
- * 2. ✅ Event listeners registered once during initialization
- * 3. ✅ Race condition prevention between SpeechSynthesis and SpeechRecognition
- * 4. ✅ Proper video synchronization with AI speech
- * 5. ✅ Reliable transcript handling with buffer clearing
- * 6. ✅ Timer synchronization - starts only after AI finishes speaking + 400ms
- * 7. ✅ Comprehensive error handling and logging
- * 8. ✅ Browser compatibility checks
- * 9. ✅ Microphone permission handling before interview starts
- * 10. ✅ Memory leak prevention with proper cleanup
- * 11. ✅ Removed redundant voice loading useEffects
- * 12. ✅ Fixed video autoplay/loop - controlled programmatically
- * 13. ✅ Implemented toggleRecording
- * 14. ✅ Fixed timer with proper setInterval/clearInterval
- * 
- * INTERVIEW FLOW:
- * Start Interview → Request Mic → Verify APIs → Load Voices → AI Intro → 
- * First Question → Wait for AI to finish → Clear Transcript → 400ms Delay →
- * Start Timer → Listen for Answer → Submit → Get Feedback → Next Question →
- * Repeat → Last Question → Finish Interview → Cleanup
- */
 function Step2({ interviewData, onFinish }) {
 
-  // ============================================================================
-  // DATA & CONFIGURATION
-  // ============================================================================
   const { interviewId, questions = [], userName, mode } = interviewData || {};
   const voiceGender = "male";
 
-  // ============================================================================
-  // STATE MANAGEMENT
-  // ============================================================================
   const [isIntroPhase, setIsIntroPhase] = useState(true);
   const [isAIPlaying, setIsAIPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState("");
-  const [feedbackData, setFeedbackData] = useState(null); // holds all detailed feedback
+  const [feedback, setFeedback] = useState("");
   const [timeLeft, setTimeLeft] = useState(60);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [isSubmmiting, setIsSubmmiting] = useState(false);
@@ -58,27 +25,16 @@ function Step2({ interviewData, onFinish }) {
   const [startError, setStartError] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
-
-  // ============================================================================
-  // REFS - PERSISTENT ACROSS RE-RENDERS & CLOSURES
-  // ============================================================================
-  
-  // The ONE SpeechRecognition instance for entire component lifecycle
   const recognitionRef = useRef(null);
   
-  // Buffer for final transcripts (doesn't trigger re-render)
   const finalTranscriptRef = useRef("");
   
-  // Prevents timer submission race condition
   const timerTriggeredRef = useRef(false);
   
-  // Reference to video element
   const videoRef = useRef(null);
   
-  // Track component mount status to prevent state updates after unmount
   const isMountedRef = useRef(true);
   
-  // Track AI speech state - when true, STOP recognition to prevent AI voice capture
   const isAISpeakingRef = useRef(false);
   
   // Track recognition state to prevent multiple start() calls
@@ -125,10 +81,6 @@ function Step2({ interviewData, onFinish }) {
     recognition.continuous = true; // Keep listening until explicitly stopped
     recognition.interimResults = true; // Get results as user is speaking
     recognition.lang = "en-IN";
-
-    // ========================================================================
-    // EVENT LISTENER: onstart - Recognition session started successfully
-    // ========================================================================
     recognition.onstart = () => {
       console.log("✅ SpeechRecognition started listening");
       isRecognitionActiveRef.current = true;
@@ -137,9 +89,6 @@ function Step2({ interviewData, onFinish }) {
       }
     };
 
-    // ========================================================================
-    // EVENT LISTENER: onend - Recognition session ended
-    // ========================================================================
     recognition.onend = () => {
       console.log("⏹️  SpeechRecognition session ended");
       isRecognitionActiveRef.current = false;
@@ -147,8 +96,6 @@ function Step2({ interviewData, onFinish }) {
         setIsRecording(false);
       }
       
-      // Auto-restart if interview is still active and AI isn't speaking
-      // This prevents the "no-speech" timeout from permanently stopping recognition
       if (
         isMountedRef.current &&
         !isAISpeakingRef.current &&
@@ -174,16 +121,13 @@ function Step2({ interviewData, onFinish }) {
       }
     };
 
-    // ========================================================================
-    // EVENT LISTENER: onerror - Handle recognition errors with details
-    // ========================================================================
     recognition.onerror = (event) => {
-      console.error(`❌ SpeechRecognition error: ${event.error}`);
+      console.error(` SpeechRecognition error: ${event.error}`);
 
       switch (event.error) {
         case "not-allowed":
           console.error(
-            "🔒 Microphone permission denied. User must grant microphone access."
+            " Microphone permission denied. User must grant microphone access."
           );
           if (isMountedRef.current) {
             setStartError(
@@ -193,7 +137,7 @@ function Step2({ interviewData, onFinish }) {
           break;
 
         case "audio-capture":
-          console.error("🎤 No microphone found or audio capture unavailable.");
+          console.error(" No microphone found or audio capture unavailable.");
           if (isMountedRef.current) {
             setStartError(
               "No microphone detected. Please check your microphone connection."
@@ -203,7 +147,7 @@ function Step2({ interviewData, onFinish }) {
 
         case "no-speech":
           console.warn(
-            "⚠️  No speech detected within the timeout period. Waiting for speech..."
+            "  No speech detected within the timeout period. Waiting for speech..."
           );
           // This is not a fatal error, just means the user is quiet
           break;
@@ -786,7 +730,7 @@ function Step2({ interviewData, onFinish }) {
         }
       );
       console.log("✅ Answer submitted, feedback received:", result.data);
-      setFeedbackData(result.data);
+      setFeedback(result.data.feedback);
 
       // 4. AI speaks feedback
       if (result.data.feedback) {
@@ -806,7 +750,7 @@ function Step2({ interviewData, onFinish }) {
 
         // 7. Reset UI
         setAnswer("");
-        setFeedbackData(null);
+        setFeedback("");
         timerTriggeredRef.current = false;
         setCurrentIndex(nextIndex);
 
@@ -1171,7 +1115,7 @@ function Step2({ interviewData, onFinish }) {
               </p>
             </motion.div>
           ) : (
-            interviewStarted && !isIntroPhase && !feedbackData && (
+            interviewStarted && !isIntroPhase && !feedback && (
               <motion.div
                 key={currentIndex}
                 initial={{
@@ -1199,7 +1143,7 @@ function Step2({ interviewData, onFinish }) {
           )}
 
           <AnimatePresence>
-            {feedbackData && (
+            {feedback && (
               <motion.div
                 initial={{
                   opacity: 0,
@@ -1215,57 +1159,21 @@ function Step2({ interviewData, onFinish }) {
                 transition={{
                   duration: 0.4,
                 }}
-                className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 space-y-4"
+                className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4"
               >
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-bold text-lg text-emerald-700">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold text-emerald-700">
                     Interview Feedback
                   </h3>
+
+                  <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">
+                    AI Generated
+                  </span>
                 </div>
 
-                {/* Short Summary */}
-                <p className="text-gray-800 font-medium">
-                  {feedbackData.feedback}
+                <p className="text-gray-700 text-sm leading-6">
+                  {feedback}
                 </p>
-
-                {/* Detailed Feedback Sections */}
-                <div className="space-y-3 mt-4">
-                  {feedbackData.technicalAccuracy && (
-                    <div className="bg-white p-4 rounded-xl shadow-sm">
-                      <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                        Technical Accuracy
-                      </h4>
-                      <p className="text-sm text-gray-600 leading-relaxed">
-                        {feedbackData.technicalAccuracy}
-                      </p>
-                    </div>
-                  )}
-
-                  {feedbackData.grammarSuggestions && (
-                    <div className="bg-white p-4 rounded-xl shadow-sm">
-                      <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-blue-500" />
-                        Grammar & Clarity Suggestions
-                      </h4>
-                      <p className="text-sm text-gray-600 leading-relaxed">
-                        {feedbackData.grammarSuggestions}
-                      </p>
-                    </div>
-                  )}
-
-                  {feedbackData.areasForImprovement && (
-                    <div className="bg-white p-4 rounded-xl shadow-sm">
-                      <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-amber-500" />
-                        Areas for Improvement
-                      </h4>
-                      <p className="text-sm text-gray-600 leading-relaxed">
-                        {feedbackData.areasForImprovement}
-                      </p>
-                    </div>
-                  )}
-                </div>
               </motion.div>
             )}
           </AnimatePresence>
