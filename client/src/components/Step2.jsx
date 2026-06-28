@@ -918,11 +918,7 @@ function Step2({ interviewData, onFinish }) {
               )}
             </div>
 
-            {/* Start Button (only if interview not started) */}
-          
-            {startError && !interviewStarted && (
-              <p className="text-red-500 text-sm mt-4">{startError}</p>
-            )}
+        
 
             <div className="flex-1 min-h-0" />
 
