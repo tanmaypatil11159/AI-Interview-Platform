@@ -250,7 +250,6 @@ Question 8 → Hard
         });
 
         return res.status(200).json({
-            success: true,
             interviewId: interview._id,
             creditsLeft: user.credits,
             userName: user.name,

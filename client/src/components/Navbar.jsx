@@ -68,25 +68,25 @@ function Navbar({ onLoginClick }) {
   }, []);
 
   return (
-<div className="fixed top-0 left-0 right-0 z-50 py-3 md:py-4 flex justify-center px-2 md:px-0">
+<div className="fixed top-0 left-0 right-0 z-50 py-4 flex justify-center">
    <motion.div
         initial={{ opacity: 0, y: -40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
-className="w-full max-w-6xl rounded-xl md:rounded-[24px] backdrop-blur-md border border-gray-300 px-4 md:px-8 py-3 md:py-4 flex justify-between items-center shadow-[0_8px_30px_rgba(0,0,0,0.08)]"      >
+className="w-full max-w-6xl rounded-[24px] backdrop-blur-md border border-gray-300 px-8 py-4 flex justify-between items-center shadow-[0_8px_30px_rgba(0,0,0,0.08)]"      >
         {/* Logo */}
-        <div className="flex items-center gap-2 md:gap-3">
-          <div className="w-8 h-8 md:w-10 h-10 bg-black rounded-lg md:rounded-xl flex items-center justify-center">
-            <FaRobot className="text-white text-base md:text-lg" />
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-black rounded-xl flex items-center justify-center">
+            <FaRobot className="text-white text-lg" />
           </div>
 
-          <h1 className="text-lg md:text-xl font-semibold text-gray-800">
+          <h1 className="text-xl font-semibold text-gray-800">
             INTERVIEW_AI
           </h1>
         </div>
 
         {/* Right Section */}
-        <div className="flex items-center gap-2 md:gap-4">
+        <div className="flex items-center gap-4">
           {/* Credits */}
           <div ref={creditsRef} className="relative">
             <button
@@ -94,9 +94,9 @@ className="w-full max-w-6xl rounded-xl md:rounded-[24px] backdrop-blur-md border
                 setShowCreditsPopup((prev) => !prev);
                 setShowUserPopup(false);
               }}
-              className="flex items-center gap-1 md:gap-2 bg-gray-100 px-2 md:px-4 py-1.5 md:py-2 rounded-full text-sm md:text-md hover:bg-gray-200 transition"
+              className="flex items-center gap-2 bg-gray-100 px-4 py-2 rounded-full text-md hover:bg-gray-200 transition"
             >
-              <BsCoin size={16} className="text-yellow-500" />
+              <BsCoin size={20} className="text-yellow-500" />
               {userData?.credits || 0}
             </button>
 
@@ -107,7 +107,7 @@ className="w-full max-w-6xl rounded-xl md:rounded-[24px] backdrop-blur-md border
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="absolute right-0 mt-2 w-52 md:w-56 bg-white border border-gray-300 rounded-lg shadow-lg p-3 md:p-4 z-10"
+                  className="absolute right-0 mt-2 w-56 bg-white border border-gray-300 rounded-lg shadow-lg p-4 z-10"
                 >
                   <p className="text-sm text-gray-700">
                     You have{" "}
@@ -133,7 +133,7 @@ className="w-full max-w-6xl rounded-xl md:rounded-[24px] backdrop-blur-md border
                       stiffness: 400,
                       damping: 20,
                     }}
-                    className="mt-3 w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 text-sm"
+                    className="mt-3 w-full bg-black text-white py-2 rounded-full hover:bg-gray-800"
                   >
                     Buy Credits
                   </motion.button>
@@ -154,12 +154,12 @@ className="w-full max-w-6xl rounded-xl md:rounded-[24px] backdrop-blur-md border
                 setShowUserPopup((prev) => !prev);
                 setShowCreditsPopup(false);
               }}
-              className="w-8 h-8 md:w-9 h-9 bg-black text-white rounded-full flex items-center justify-center font-semibold text-sm"
+              className="w-9 h-9 bg-black text-white rounded-full flex items-center justify-center font-semibold"
             >
               {userData?.name ? (
                 userData.name.charAt(0).toUpperCase()
               ) : (
-                <FaUserAstronaut size={14} />
+                <FaUserAstronaut size={16} />
               )}
             </button>
 
@@ -170,15 +170,15 @@ className="w-full max-w-6xl rounded-xl md:rounded-[24px] backdrop-blur-md border
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -10, scale: 0.95 }}
                   transition={{ duration: 0.2, ease: "easeOut" }}
-                  className="absolute right-0 mt-2 w-52 md:w-56 bg-white border border-gray-300 rounded-lg shadow-lg p-3 md:p-4 z-10"
+                  className="absolute right-0 mt-2 w-56 bg-white border border-gray-300 rounded-lg shadow-lg p-4 z-10"
                 >
                   {/* User Info */}
                   <div className="pb-3 border-b border-gray-200">
-                    <p className="font-semibold text-gray-900 text-sm md:text-base">
+                    <p className="font-semibold text-gray-900">
                       {userData?.name || "User"}
                     </p>
 
-                    <p className="text-xs md:text-sm text-gray-500">
+                    <p className="text-sm text-gray-500">
                       Credits:{" "}
                       <span className="text-red-500 font-semibold">
                         {userData?.credits || 0}
@@ -193,14 +193,14 @@ className="w-full max-w-6xl rounded-xl md:rounded-[24px] backdrop-blur-md border
                         setShowUserPopup(false);
                         navigate("/history");
                       }}
-                      className="w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 transition text-sm"
+                      className="w-full bg-black text-white py-2 rounded-full hover:bg-gray-800 transition"
                     >
                       History
                     </button>
 
                     <button
                       onClick={handleLogout}
-                      className="w-full bg-red-500 text-white py-2 rounded-full hover:bg-red-600 transition text-sm"
+                      className="w-full bg-red-500 text-white py-2 rounded-full hover:bg-red-600 transition"
                     >
                       Logout
                     </button>
