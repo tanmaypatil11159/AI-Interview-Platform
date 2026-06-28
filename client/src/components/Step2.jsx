@@ -8,10 +8,12 @@ import { FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
 
 function Step2({ interviewData, onFinish }) {
 
+  // data taken from the step 1
   const { interviewId, questions = [], userName, mode } = interviewData || {};
+
+  const voiceGender =  "male";
+
   const [isIntroPhase, setIsIntroPhase] = useState(true);
-  const recognitionRef = useRef(null);
-  const finalTranscriptRef = useRef("");
   const [isAIPlaying, setIsAIPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -19,14 +21,16 @@ function Step2({ interviewData, onFinish }) {
   const [timeLeft, setTimeLeft] = useState(60);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [isSubmmiting, setIsSubmmiting] = useState(false);
-  const voiceGender =  "male";
   const [subtitle, setSubtitle] = useState("");
   const [timerRunning, setTimerRunning] = useState(false);
-  const timerTriggeredRef = useRef(false);
   const [interviewStarted, setInterviewStarted] = useState(false);
   const [startError, setStartError] = useState("");
 
+  const recognitionRef = useRef(null);
+  const finalTranscriptRef = useRef("");
+  const timerTriggeredRef = useRef(false);
   const videoRef = useRef(null)
+
   const currentQuestion = questions[currentIndex]
   const totalQuestions = questions.length;
 
@@ -137,13 +141,18 @@ function Step2({ interviewData, onFinish }) {
           voices.find((v) => v.name.includes("Susan"));
       }
 
-      if (voices.length > 0) {
-        setSelectedVoice(selectedVoiceCandidate || voices[0]);
-      }
+if (voices.length > 0) {
+    setSelectedVoice(
+        selectedVoiceCandidate ||
+        voices.find(v => v.default) ||
+        voices[0]
+    );
 
-      if (voices.length === 0) {
-        setStartError("Voice setup is still loading. Please try again in a moment.");
-      }
+    setStartError("");
+}
+if (!selectedVoice && voices.length > 0) {
+    setSelectedVoice(voices[0]);
+}
     };
 
     loadVoices();
@@ -154,7 +163,7 @@ function Step2({ interviewData, onFinish }) {
 
   const speakText = useCallback((text) => {
     return new Promise((resolve) => {
-      if (!window.speechSynthesis || !selectedVoice) {
+      if (!window.speechSynthesis) {
         resolve();
         return;
       }
@@ -168,8 +177,9 @@ function Step2({ interviewData, onFinish }) {
 
       const utterance = new SpeechSynthesisUtterance(humanText);
 
-      utterance.voice = selectedVoice;
-      utterance.rate = 0.92;
+if (selectedVoice) {
+    utterance.voice = selectedVoice;
+}      utterance.rate = 0.92;
       utterance.pitch =
         voiceGender === "female" ? 1.05 : 0.9;
       utterance.volume = 1;
@@ -195,8 +205,12 @@ function Step2({ interviewData, onFinish }) {
 
         resolve();
       };
+window.speechSynthesis.cancel();
+window.speechSynthesis.resume();
 
-      window.speechSynthesis.speak(utterance);
+setTimeout(() => {
+    window.speechSynthesis.speak(utterance);
+}, 100);
     });
   }, [selectedVoice, voiceGender]);
 
@@ -611,19 +625,7 @@ useEffect(() => {
           transition={{ duration: 0.7 }}
           className="relative bg-white rounded-3xl shadow-sm p-6 flex flex-col"
         >
-          {!interviewStarted && (
-            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 rounded-3xl bg-black/40 backdrop-blur-sm">
-              <button
-                onClick={startInterview}
-                className="rounded-full bg-emerald-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-emerald-700"
-              >
-                Start Interview
-              </button>
-              {startError && (
-                <p className="max-w-xs text-center text-sm text-white">{startError}</p>
-              )}
-            </div>
-          )}
+          
           
           <motion.h1
             initial={{ y: -20 }}
