@@ -304,14 +304,20 @@ export const submitAnswer = async (req, res) => {
                 content: `
             You are a professional human interviewer evaluating a candidate's answer in a real interview.
 
-            Evaluate naturally and fairly, like a real person would.
+            Evaluate the answer thoroughly and provide detailed feedback.
 
             Score the answer in these areas (0 to 10):
 
             1. Confidence – Does the answer sound clear, confident, and well-presented?
             2. Communication – Is the language simple, clear, and easy to understand?
             3. Correctness – Is the answer accurate, relevant, and complete?
-            4. Technical - Does the candidate demonstrate strong understanding of the technology, concepts, implementation details, and best practices related to the topic?
+            4. Technical - Does the candidate demonstrate strong understanding of the technology, concepts, implementation details, and best practices related to the topic? (Only applicable for Technical interviews, skip or give 0 for HR)
+
+            Provide detailed feedback in these categories:
+
+            1. technicalAccuracy: Detailed explanation of the accuracy of the answer's technical content (or general for HR).
+            2. grammarSuggestions: List any grammar, wording, or clarity improvements the candidate can make.
+            3. areasForImprovement: Specific areas the candidate should focus on improving.
 
             Rules:
             - Be realistic and unbiased.
@@ -324,8 +330,7 @@ export const submitAnswer = async (req, res) => {
             finalScore = average of confidence, communication, and correctness (rounded to nearest whole number).
 
             Feedback Rules:
-            - Write natural human feedback.
-            - 10 to 15 words only.
+            - Write a short, natural 10-15 word human feedback summary.
             - Sound like real interview feedback.
             - Can suggest improvement if needed.
             - Do NOT repeat the question.
@@ -333,14 +338,16 @@ export const submitAnswer = async (req, res) => {
             - Keep tone professional and honest.
 
             Return ONLY valid JSON in this format:
-
             {
             "confidence": number,
             "communication": number,
             "correctness": number,
             "technical": number,
             "finalScore": number,
-            "feedback": "short human feedback"
+            "feedback": "short human feedback",
+            "technicalAccuracy": "detailed technical accuracy feedback",
+            "grammarSuggestions": "grammar and clarity suggestions",
+            "areasForImprovement": "areas for improvement"
             }
             `
             },
@@ -349,6 +356,7 @@ export const submitAnswer = async (req, res) => {
                 content: `
             Question: ${question.question}
             Answer: ${answer}
+            Interview Mode: ${interview.mode}
             `
             }
         ];
@@ -366,10 +374,21 @@ export const submitAnswer = async (req, res) => {
         question.technical = parsed.technical;
         question.score = parsed.finalScore;
         question.feedback = parsed.feedback;
+        question.technicalAccuracy = parsed.technicalAccuracy;
+        question.grammarSuggestions = parsed.grammarSuggestions;
+        question.areasForImprovement = parsed.areasForImprovement;
 
         await interview.save();
         return res.status(200).json({
-            feedback: parsed.feedback
+            feedback: parsed.feedback,
+            confidence: parsed.confidence,
+            communication: parsed.communication,
+            correctness: parsed.correctness,
+            technical: parsed.technical,
+            finalScore: parsed.finalScore,
+            technicalAccuracy: parsed.technicalAccuracy,
+            grammarSuggestions: parsed.grammarSuggestions,
+            areasForImprovement: parsed.areasForImprovement
         });
 
     } catch (error) {

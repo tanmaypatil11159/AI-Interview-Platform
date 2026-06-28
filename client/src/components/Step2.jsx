@@ -48,7 +48,7 @@ function Step2({ interviewData, onFinish }) {
   const [isAIPlaying, setIsAIPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState("");
-  const [feedback, setFeedback] = useState("");
+  const [feedbackData, setFeedbackData] = useState(null); // holds all detailed feedback
   const [timeLeft, setTimeLeft] = useState(60);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [isSubmmiting, setIsSubmmiting] = useState(false);
@@ -786,7 +786,7 @@ function Step2({ interviewData, onFinish }) {
         }
       );
       console.log("✅ Answer submitted, feedback received:", result.data);
-      setFeedback(result.data.feedback);
+      setFeedbackData(result.data);
 
       // 4. AI speaks feedback
       if (result.data.feedback) {
@@ -806,7 +806,7 @@ function Step2({ interviewData, onFinish }) {
 
         // 7. Reset UI
         setAnswer("");
-        setFeedback("");
+        setFeedbackData(null);
         timerTriggeredRef.current = false;
         setCurrentIndex(nextIndex);
 
@@ -1171,7 +1171,7 @@ function Step2({ interviewData, onFinish }) {
               </p>
             </motion.div>
           ) : (
-            interviewStarted && !isIntroPhase && !feedback && (
+            interviewStarted && !isIntroPhase && !feedbackData && (
               <motion.div
                 key={currentIndex}
                 initial={{
@@ -1199,7 +1199,7 @@ function Step2({ interviewData, onFinish }) {
           )}
 
           <AnimatePresence>
-            {feedback && (
+            {feedbackData && (
               <motion.div
                 initial={{
                   opacity: 0,
@@ -1215,21 +1215,132 @@ function Step2({ interviewData, onFinish }) {
                 transition={{
                   duration: 0.4,
                 }}
-                className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-4"
+                className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 space-y-4"
               >
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-semibold text-emerald-700">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-bold text-lg text-emerald-700">
                     Interview Feedback
                   </h3>
 
-                  <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">
-                    AI Generated
+                  <span className="text-xs px-3 py-1 rounded-full bg-emerald-100 text-emerald-700 font-semibold">
+                    Score: {feedbackData.finalScore}/10
                   </span>
                 </div>
 
-                <p className="text-gray-700 text-sm leading-6">
-                  {feedback}
+                {/* Short Summary */}
+                <p className="text-gray-800 font-medium">
+                  {feedbackData.feedback}
                 </p>
+
+                {/* Scores Grid */}
+                <div className="grid grid-cols-2 gap-3 mt-3">
+                  <div className="bg-white p-3 rounded-xl shadow-sm">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-semibold text-gray-700">
+                        Confidence
+                      </span>
+                      <span className="text-emerald-600 font-bold">
+                        {feedbackData.confidence}/10
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                        style={{ width: `${(feedbackData.confidence/10)*100}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-xl shadow-sm">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-semibold text-gray-700">
+                        Communication
+                      </span>
+                      <span className="text-emerald-600 font-bold">
+                        {feedbackData.communication}/10
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                        style={{ width: `${(feedbackData.communication/10)*100}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-xl shadow-sm">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-semibold text-gray-700">
+                        Correctness
+                      </span>
+                      <span className="text-emerald-600 font-bold">
+                        {feedbackData.correctness}/10
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                        style={{ width: `${(feedbackData.correctness/10)*100}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="bg-white p-3 rounded-xl shadow-sm">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-sm font-semibold text-gray-700">
+                        Technical
+                      </span>
+                      <span className="text-emerald-600 font-bold">
+                        {feedbackData.technical}/10
+                      </span>
+                    </div>
+                    <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-emerald-500 rounded-full transition-all duration-500"
+                        style={{ width: `${(feedbackData.technical/10)*100}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Detailed Feedback Sections */}
+                <div className="space-y-3 mt-4">
+                  {feedbackData.technicalAccuracy && (
+                    <div className="bg-white p-4 rounded-xl shadow-sm">
+                      <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                        Technical Accuracy
+                      </h4>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        {feedbackData.technicalAccuracy}
+                      </p>
+                    </div>
+                  )}
+
+                  {feedbackData.grammarSuggestions && (
+                    <div className="bg-white p-4 rounded-xl shadow-sm">
+                      <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-blue-500" />
+                        Grammar & Clarity Suggestions
+                      </h4>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        {feedbackData.grammarSuggestions}
+                      </p>
+                    </div>
+                  )}
+
+                  {feedbackData.areasForImprovement && (
+                    <div className="bg-white p-4 rounded-xl shadow-sm">
+                      <h4 className="font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-amber-500" />
+                        Areas for Improvement
+                      </h4>
+                      <p className="text-sm text-gray-600 leading-relaxed">
+                        {feedbackData.areasForImprovement}
+                      </p>
+                    </div>
+                  )}
+                </div>
               </motion.div>
             )}
           </AnimatePresence>
