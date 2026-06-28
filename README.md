@@ -2,6 +2,8 @@
 
 An AI-powered interview preparation platform that helps users practice mock interviews using Generative AI. The platform generates role-specific interview questions, evaluates responses, and provides personalized feedback to improve interview performance and confidence.
 
+## Deployed on vercel and render, Link: https://ai-interview-platform-pkbe.vercel.app/
+
 ## Features
 
 - AI-generated interview questions
