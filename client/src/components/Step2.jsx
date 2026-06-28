@@ -919,19 +919,7 @@ function Step2({ interviewData, onFinish }) {
             </div>
 
             {/* Start Button (only if interview not started) */}
-            {!interviewStarted && !isIntroPhase === false && (
-              <div className="flex-1 flex items-center justify-center">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={startInterview}
-                  disabled={!!startError}
-                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-lg disabled:opacity-50"
-                >
-                  {startError ? "Error: Check Console" : "Start Interview"}
-                </motion.button>
-              </div>
-            )}
+          
             {startError && !interviewStarted && (
               <p className="text-red-500 text-sm mt-4">{startError}</p>
             )}
