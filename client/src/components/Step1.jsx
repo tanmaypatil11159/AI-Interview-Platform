@@ -50,7 +50,7 @@ const Step1 = ({ onStart }) => {
       const res = await axios.post(
         `${ServerUrl}/api/interview/generate-questions`,
         {
-          jobRole,
+          role: jobRole,
           jobDescription,
           experience: jobExperience,
           mode
