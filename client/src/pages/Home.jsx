@@ -103,7 +103,7 @@ const steps = [
       {/* Hero Section */}
 
       <motion.section
-        className="flex flex-col items-center justify-center px-6 py-20"
+        className="flex flex-col items-center justify-center px-4 md:px-6 py-12 md:py-20"
         initial="hidden"
         animate="visible"
         variants={heroContainer}
@@ -111,7 +111,7 @@ const steps = [
         {/* Badge */}
         <motion.div
           variants={fadeUp}
-          className="flex items-center gap-2 border border-gray-200 bg-white px-4 py-2 rounded-full text-sm text-gray-600"
+          className="flex items-center gap-2 border border-gray-200 bg-white px-3 md:px-4 py-1.5 md:py-2 rounded-full text-xs md:text-sm text-gray-600"
         >
 
         </motion.div>
@@ -119,12 +119,12 @@ const steps = [
         {/* Heading */}
         <motion.h1
           variants={fadeUp}
-          className="text-center pt-7 text-5xl md:text-8xl font-bold mt-8 leading-tight"
+          className="text-center pt-4 md:pt-7 text-3xl md:text-5xl lg:text-8xl font-bold mt-6 md:mt-8 leading-tight"
         >
           Practice Interviews with
           <br />
 
-          <span className=" mt-4">
+          <span className=" mt-3 md:mt-4">
             <TypeAnimation
               sequence={[
                 "AI Intelligence",
@@ -139,7 +139,7 @@ const steps = [
               wrapper="span"
               speed={35}
               repeat={Infinity}
-              className="text-black-600 px-6 py-2 rounded-full inline-block"
+              className="text-black-600 px-4 md:px-6 py-1.5 md:py-2 rounded-full inline-block"
             />
           </span>
         </motion.h1>
@@ -147,20 +147,20 @@ const steps = [
         {/* Subtitle */}
         <motion.p
           variants={fadeUp}
-          className="text-center text-gray-500 text-2xl mt-6 max-w-2xl"
+          className="text-center text-gray-500 text-lg md:text-2xl mt-4 md:mt-6 max-w-xl md:max-w-2xl px-2"
         >
           Role-based mock interviews with smart follow-ups,
           adaptive difficulty and real-time performance evaluation.
         </motion.p>
 
         {/* Buttons */}
-        <motion.div variants={fadeUp} className="flex gap-4 mt-10">
+        <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3 md:gap-4 mt-8 md:mt-10">
           <motion.button
             onClick={() => navigate("/interview")}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            className="cursor-pointer bg-black text-white px-8 py-3 rounded-full"
+            className="cursor-pointer bg-black text-white px-6 md:px-8 py-2.5 md:py-3 rounded-full text-sm md:text-base"
           >
             Start Interview
           </motion.button>
@@ -170,16 +170,16 @@ const steps = [
             whileHover={{ scale: 1.05, backgroundColor: "#f3f4f6" }}
             whileTap={{ scale: 0.97 }}
             transition={{ type: "spring", stiffness: 400, damping: 17 }}
-            className="cursor-pointer border border-gray-300 bg-white px-8 py-3 rounded-full"
+            className="cursor-pointer border border-gray-300 bg-white px-6 md:px-8 py-2.5 md:py-3 rounded-full text-sm md:text-base"
           >
             View History
           </motion.button>
         </motion.div>
 
         {/* Moving Bar */}
-        <div className="w-full bg-white border-y border-gray-200 py-6 mt-16 overflow-hidden relative">
-          <div className="absolute inset-y-0 left-0 w-20 bg-gradient-to-r from-white to-transparent z-10" />
-          <div className="absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-white to-transparent z-10" />
+        <div className="w-full bg-white border-y border-gray-200 py-4 md:py-6 mt-12 md:mt-16 overflow-hidden relative">
+          <div className="absolute inset-y-0 left-0 w-12 md:w-20 bg-gradient-to-r from-white to-transparent z-10" />
+          <div className="absolute inset-y-0 right-0 w-12 md:w-20 bg-gradient-to-l from-white to-transparent z-10" />
 
           <motion.div
             animate={{
@@ -193,24 +193,24 @@ const steps = [
             className="flex w-max"
           >
             {[...Array(2)].map((_, i) => (
-              <div key={i} className="flex shrink-0 items-center gap-12 px-6">
-                <span className="text-8xl font-bold text-gray-300">
+              <div key={i} className="flex shrink-0 items-center gap-6 md:gap-12 px-4 md:px-6">
+                <span className="text-4xl md:text-6xl lg:text-8xl font-bold text-gray-300">
                   REAL-TIME EVALUATION #
                 </span>
 
-                <span className="text-8xl font-bold text-gray-300">
+                <span className="text-4xl md:text-6xl lg:text-8xl font-bold text-gray-300">
                   AI-POWERED FEEDBACK #
                 </span>
 
-                <span className="text-8xl font-bold text-gray-300">
+                <span className="text-4xl md:text-6xl lg:text-8xl font-bold text-gray-300">
                   MOCK INTERVIEWS #
                 </span>
 
-                <span className="text-8xl font-bold text-gray-300">
+                <span className="text-4xl md:text-6xl lg:text-8xl font-bold text-gray-300">
                   ADAPTIVE DIFFICULTY #
                 </span>
 
-                <span className="text-8xl font-bold text-gray-300">
+                <span className="text-4xl md:text-6xl lg:text-8xl font-bold text-gray-300">
                   SMART VOICE ANALYSIS #
                 </span>
               </div>
@@ -221,7 +221,7 @@ const steps = [
 
         {/* Steps Cards */}
         <motion.div
-          className="grid lg:grid-cols-3 gap-8 mt-24 max-w-7xl w-full"
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 mt-16 md:mt-24 max-w-7xl w-full px-2"
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, amount: 0.3 }}
@@ -240,13 +240,13 @@ const steps = [
                 stiffness: 260,
                 damping: 18,
               }}
-              className={`relative overflow-hidden rounded-3xl border backdrop-blur-xl bg-white/80 p-8 group border-gray-200 hover:border-green-300}`}
+              className={`relative overflow-hidden rounded-2xl md:rounded-3xl border backdrop-blur-xl bg-white/80 p-5 md:p-8 group border-gray-200 hover:border-green-300}`}
             >
               {/* Background Glow */}
-              <div className="absolute -top-20 -right-20 w-56 h-56 rounded-full bg-green-200/30 blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700" />
+              <div className="absolute -top-16 md:-top-20 -right-16 md:-right-20 w-44 md:w-56 h-44 md:h-56 rounded-full bg-green-200/30 blur-3xl opacity-0 group-hover:opacity-100 transition-all duration-700" />
 
               {/* Step Number */}
-              <span className="absolute top-5 right-6 text-6xl font-black text-gray-100 select-none">
+              <span className="absolute top-4 md:top-5 right-4 md:right-6 text-4xl md:text-6xl font-black text-gray-100 select-none">
                 0{index + 1}
               </span>
 
@@ -257,23 +257,23 @@ const steps = [
                   scale: 1.12,
                 }}
                 transition={{ type: "spring", stiffness: 250 }}
-                className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-green-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-green-300/40"
+                className="relative w-12 md:w-16 h-12 md:h-16 rounded-xl md:rounded-2xl bg-gradient-to-br from-green-500 to-emerald-400 flex items-center justify-center shadow-lg shadow-green-300/40"
               >
-                <Icon size={30} className="text-white" />
+                <Icon size={24} className="md:text-[30px] text-white" />
               </motion.div>
 
               {/* Step */}
-              <p className="mt-8 text-xs font-bold uppercase tracking-[0.25em] text-green-600">
+              <p className="mt-5 md:mt-8 text-xs font-bold uppercase tracking-[0.25em] text-green-600">
                 {step}
               </p>
 
               {/* Title */}
-              <h3 className="mt-3 text-2xl font-bold text-gray-900 leading-snug">
+              <h3 className="mt-2 md:mt-3 text-xl md:text-2xl font-bold text-gray-900 leading-snug">
                 {title}
               </h3>
 
               {/* Description */}
-              <p className="mt-4 text-gray-500 leading-7">
+              <p className="mt-3 md:mt-4 text-gray-500 text-sm md:text-base leading-6 md:leading-7">
                 {desc}
               </p>
 
@@ -282,9 +282,8 @@ const steps = [
                 initial={{ width: 0 }}
                 whileHover={{ width: "100%" }}
                 transition={{ duration: 0.4 }}
-                className="mt-8 h-1 rounded-full bg-gradient-to-r from-green-500 via-emerald-400 to-lime-300"
+                className="mt-6 md:mt-8 h-1 rounded-full bg-gradient-to-r from-green-500 via-emerald-400 to-lime-300"
               />
-
 
 
 
