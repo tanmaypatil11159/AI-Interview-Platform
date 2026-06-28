@@ -81,7 +81,7 @@ className="w-full max-w-6xl rounded-[24px] backdrop-blur-md border border-gray-3
           </div>
 
           <h1 className="text-xl font-semibold text-gray-800">
-            IntervieW.AI
+            INTERVIEW_AI
           </h1>
         </div>
 

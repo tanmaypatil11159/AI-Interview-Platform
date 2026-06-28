@@ -48,7 +48,7 @@ const Footer = () => {
       {/* Huge Brand Text */}
       <div className="mt-20">
         <h1 className="text-[20vw] md:text-[14vw] leading-none font-semibold tracking-tight text-black">
-          InterviewIQ.AI
+          INTERVIEW_AI
         </h1>
       </div>
 
