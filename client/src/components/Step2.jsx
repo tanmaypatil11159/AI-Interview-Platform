@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿﻿import { useState, useEffect, useRef, useCallback } from "react";
+﻿﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { ServerUrl } from "../utils/constants";
@@ -759,7 +759,7 @@ function Step2({ interviewData, onFinish }) {
     } finally {
       setIsSubmmiting(false);
     }
-  }, [answer, currentIndex, currentQuestion, finishInterview, interviewId, isSubmmiting, questions, speakText, timeLeft, totalQuestions, stopRecognition, startRecognition, clearTranscript]);
+  }, [answer, currentIndex, finishInterview, interviewId, isSubmmiting, questions, speakText, totalQuestions, stopRecognition, startRecognition, clearTranscript, elapsedTime]);
 
   useEffect(() => {
     return () => {
@@ -890,8 +890,6 @@ function Step2({ interviewData, onFinish }) {
               )}
             </div>
 
-        
-
             <div className="flex-1 min-h-0" />
 
             {/* Timer Warning Messages */}
@@ -918,7 +916,7 @@ function Step2({ interviewData, onFinish }) {
               </motion.div>
             )}
 
-            <div className="flex justify-center  mb-8">
+            <div className="flex justify-center mb-8">
               <motion.div
                 animate={
                   timeLeft <= 10
@@ -974,23 +972,23 @@ function Step2({ interviewData, onFinish }) {
                     key={timeLeft}
                     initial={{ scale: 1.2 }}
                     animate={{ scale: 1 }}
-                    className={`text-3xl font-bold ${percentage > 60
+                    className={`text-3xl font-bold ${elapsedPercentage <= 100
                       ? "text-emerald-600"
-                      : percentage > 30
-                        ? "text-orange-500"
-                        : "text-red-500"
-                      }`}
+                      : elapsedPercentage <= 125
+                      ? "text-yellow-600"
+                      : "text-red-600"
+                    }`}
                   >
-                    {timeLeft}s
+                    {elapsedTime}s
                   </motion.span>
 
                   <span className="text-xs text-gray-500">
-                    Remaining
+                    Elapsed
                   </span>
                 </div>
 
                 {/* Pulsing Warning */}
-                {percentage <= 20 && (
+                {timerStage === 'red' && (
                   <motion.div
                     animate={{
                       scale: [1, 1.4],
@@ -1232,8 +1230,8 @@ function Step2({ interviewData, onFinish }) {
                 {isSubmmiting
                   ? "Submitting..."
                   : currentIndex === totalQuestions - 1
-                    ? "Finish Interview"
-                    : "Submit Answer"}
+                  ? "Finish Interview"
+                  : "Submit Answer"}
               </motion.button>
             </div>
           )}
