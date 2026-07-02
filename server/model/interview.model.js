@@ -45,7 +45,19 @@ const interviewSchema = new mongoose.Schema({
         type: String,
         enum: ['Incompleted','Completed'],
         default: 'Incompleted'
-    }
+    },
+    activityEvents: [{
+        type: {
+            type: String,
+            enum: ['FULLSCREEN_EXIT', 'TAB_SWITCH', 'WINDOW_BLUR', 'WINDOW_MINIMIZE'],
+            required: true
+        },
+        timestamp: {
+            type: Date,
+            default: Date.now
+        },
+        details: String
+    }]
 },{timestamps:true});
 
 const Interview = mongoose.model("Interview",interviewSchema)

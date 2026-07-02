@@ -4,7 +4,7 @@ import axios from "axios";
 import { ServerUrl } from "../utils/constants";
 import femaleVideo from "../assets/female-ai.mp4";
 import maleVideo from "../assets/male-ai.mp4";
-import { FaMicrophone, FaMicrophoneSlash } from "react-icons/fa";
+import { FaMicrophone, FaMicrophoneSlash, FaExclamationTriangle } from "react-icons/fa";
 
 function Step2({ interviewData, onFinish }) {
 
@@ -16,7 +16,7 @@ function Step2({ interviewData, onFinish }) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState("");
-  const [timeLeft, setTimeLeft] = useState(60);
+  const [timeLeft, setTimeLeft] = useState(180);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [isSubmmiting, setIsSubmmiting] = useState(false);
@@ -26,6 +26,10 @@ function Step2({ interviewData, onFinish }) {
   const [startError, setStartError] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
+  const [isRequestingFullscreen, setIsRequestingFullscreen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+  const [warningMessage, setWarningMessage] = useState("");
   const recognitionRef = useRef(null);
   
   const finalTranscriptRef = useRef("");
@@ -60,7 +64,7 @@ function Step2({ interviewData, onFinish }) {
   // Calculate timer stage
   const getTimerStage = () => {
     if (!currentQuestion) return 'green';
-    const timeLimit = currentQuestion.timeLimit || 60;
+    const timeLimit = currentQuestion.timeLimit || 180;
     const percentage = (elapsedTime / timeLimit) * 100;
     if (percentage <= 100) return 'green';
     if (percentage <= 125) return 'yellow';
@@ -68,7 +72,156 @@ function Step2({ interviewData, onFinish }) {
   };
 
   const timerStage = getTimerStage();
+  const questionTimeLimit = currentQuestion?.timeLimit || 180;
+  const elapsedPercentage = (elapsedTime / questionTimeLimit) * 100;
 
+  // Timer color based on stage
+  const timerColor =
+    timerStage === 'green'
+      ? "#10b981"
+      : timerStage === 'yellow'
+      ? "#f59e0b"
+      : "#ef4444";
+
+  // Progress is based on elapsed time
+  const progress =
+    Math.max(
+      0,
+      Math.min(
+        2 * Math.PI * 45,
+        (elapsedPercentage / 100) * (2 * Math.PI * 45)
+      )
+    );
+
+  const hasQuestions = Array.isArray(questions) && questions.length > 0;
+
+  // Helper function to record interview activity
+  const recordActivity = useCallback(async (type, details) => {
+    if (!interviewId || !interviewStarted) return;
+    try {
+      await axios.post(
+        `${ServerUrl}/api/interview/record-activity`,
+        {
+          interviewId,
+          type,
+          details
+        },
+        { withCredentials: true }
+      );
+    } catch (e) {
+      console.error("Failed to record activity:", e);
+    }
+  }, [interviewId, interviewStarted]);
+
+  // Helper function to request fullscreen
+  const requestFullscreen = useCallback(async () => {
+    try {
+      if (!document.documentElement.requestFullscreen) {
+        throw new Error("Fullscreen API is not supported in this browser.");
+      }
+      await document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+      return true;
+    } catch (e) {
+      console.error("Fullscreen request failed:", e);
+      return false;
+    }
+  }, []);
+
+  // Helper function to check fullscreen status
+  const checkFullscreen = useCallback(() => {
+    const fullscreenElement = document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement;
+    return !!fullscreenElement;
+  }, []);
+
+  // Update startInterview to first request fullscreen
+  const startInterview = useCallback(async () => {
+    if (interviewStarted) return;
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setStartError("Speech recognition is not supported in this browser. Please use Chrome, Edge, or Brave.");
+      return;
+    }
+
+    if (!window.speechSynthesis || typeof window.speechSynthesis.speak !== "function") {
+      setStartError("Speech synthesis is not available in this browser.");
+      return;
+    }
+
+    if (!voicesLoaded || !selectedVoice) {
+      setStartError("Voice setup is still loading. Please try again in a moment.");
+      return;
+    }
+
+    try {
+      console.log("🎤 Requesting microphone permission...");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop());
+      console.log("✅ Microphone permission granted");
+    } catch (err) {
+      console.error("🔒 Microphone permission denied:", err);
+      setStartError("Microphone permission denied. Please allow microphone access to continue.");
+      return;
+    }
+
+    setIsRequestingFullscreen(true);
+    const fullscreenSuccess = await requestFullscreen();
+    setIsRequestingFullscreen(false);
+
+    if (!fullscreenSuccess) {
+      setStartError("Full Screen Mode is required to continue your interview. Please enable Full Screen Mode and try again.");
+      return;
+    }
+
+    setStartError("");
+    setInterviewStarted(true);
+    console.log("✅ Interview started");
+
+    await speakText(
+      `Hi ${userName}, I am ${voiceGender === "male" ? "David" : "Jennie"}. It's great to meet you today. I hope you're feeling confident and ready.`
+    );
+
+    if (mode === "Technical") {
+      await speakText(
+        "Today we'll be conducting a technical interview. I'll ask you questions related to your technical knowledge, problem-solving skills, and project experience. Take your time, explain your thought process clearly, and answer each question one at a time. Let's begin."
+      );
+    } else {
+      await speakText(
+        "Today we'll be conducting an HR interview. I'll ask you questions about your background, communication skills, teamwork, career goals, and professional experiences. Answer naturally and be yourself. Let's begin."
+      );
+    }
+
+    setIsIntroPhase(false);
+
+    if (questions?.length > 0) {
+      setCurrentIndex(0);
+      await speakText(questions[0]?.question);
+      console.log("⏳ Waiting 400ms after AI speech...");
+      await new Promise(r => setTimeout(r, 400));
+      clearTranscript();
+      setTimeLeft(questions[0]?.timeLimit || 180);
+      setElapsedTime(0);
+      setTimerRunning(true);
+      timerTriggeredRef.current = false;
+      startRecognition();
+    }
+  }, [
+    interviewStarted,
+    mode,
+    questions,
+    selectedVoice,
+    speakText,
+    userName,
+    voiceGender,
+    startRecognition,
+    clearTranscript,
+    voicesLoaded,
+    requestFullscreen
+  ]);
 
   // ============================================================================
   // INITIALIZATION: SETUP SPEECH RECOGNITION ONCE FOR ENTIRE LIFECYCLE
@@ -339,6 +492,66 @@ function Step2({ interviewData, onFinish }) {
   }, [voiceGender]);
 
   // ============================================================================
+  // FULLSCREEN & ACTIVITY LISTENERS
+  // ============================================================================
+  useEffect(() => {
+    if (!interviewStarted) return;
+
+    // Handle fullscreen change
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = checkFullscreen();
+      setIsFullscreen(isCurrentlyFullscreen);
+      
+      if (!isCurrentlyFullscreen && interviewStarted) {
+        console.log("⚠️  User exited fullscreen");
+        recordActivity("FULLSCREEN_EXIT", "User exited fullscreen mode");
+        setWarningMessage("You have exited Full Screen Mode. Please return to continue your interview. This activity has been recorded.");
+        setShowWarning(true);
+      }
+    };
+
+    // Handle tab visibility change
+    const handleVisibilityChange = () => {
+      if (document.hidden && interviewStarted) {
+        console.log("⚠️  Tab switched");
+        recordActivity("TAB_SWITCH", "User switched to another tab");
+        setWarningMessage("You have switched tabs. Please return to continue your interview. This activity has been recorded.");
+        setShowWarning(true);
+      }
+    };
+
+    // Handle window blur
+    const handleWindowBlur = () => {
+      if (interviewStarted) {
+        console.log("⚠️  Window blurred");
+        recordActivity("WINDOW_BLUR", "Window lost focus");
+        setWarningMessage("Your window has lost focus. Please return to continue your interview. This activity has been recorded.");
+        setShowWarning(true);
+      }
+    };
+
+    // Listen to events
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    document.addEventListener("mozfullscreenchange", handleFullscreenChange);
+    document.addEventListener("MSFullscreenChange", handleFullscreenChange);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleWindowBlur);
+
+    // Check initial fullscreen state
+    handleFullscreenChange();
+
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
+      document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleWindowBlur);
+    };
+  }, [interviewStarted, checkFullscreen, recordActivity]);
+
+  // ============================================================================
   // HELPER: Safe recognition start (prevents InvalidStateError)
   // ============================================================================
   const startRecognition = useCallback(() => {
@@ -423,34 +636,6 @@ function Step2({ interviewData, onFinish }) {
     finalTranscriptRef.current = "";
     setAnswer("");
   }, []);
-
-  const radius = 45;
-  const circumference = 2 * Math.PI * radius;
-
-  const questionTimeLimit =
-    currentQuestion?.timeLimit || 60;
-  const elapsedPercentage = (elapsedTime / questionTimeLimit) * 100;
-
-  // Timer color based on stage
-  const timerColor =
-    timerStage === 'green'
-      ? "#10b981"
-      : timerStage === 'yellow'
-      ? "#f59e0b"
-      : "#ef4444";
-
-  // Progress is based on elapsed time
-  const progress =
-    Math.max(
-      0,
-      Math.min(
-        circumference,
-        (elapsedPercentage / 100) *
-        circumference
-      )
-    );
-
-  const hasQuestions = Array.isArray(questions) && questions.length > 0;
 
   // ============================================================================
   // SPEECH SYNTHESIS - SAFE & CONTROLLED
@@ -558,79 +743,6 @@ function Step2({ interviewData, onFinish }) {
     });
   }, [selectedVoice, voiceGender, stopRecognition]);
 
-  const startInterview = useCallback(async () => {
-    if (interviewStarted) return;
-
-    console.log("🚀 Starting interview...");
-
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      setStartError("Speech recognition is not supported in this browser. Please use Chrome, Edge, or Brave.");
-      return;
-    }
-
-    if (!window.speechSynthesis || typeof window.speechSynthesis.speak !== "function") {
-      setStartError("Speech synthesis is not available in this browser.");
-      return;
-    }
-
-    if (!voicesLoaded || !selectedVoice) {
-      setStartError("Voice setup is still loading. Please try again in a moment.");
-      return;
-    }
-
-    try {
-      console.log("🎤 Requesting microphone permission...");
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      
-      stream.getTracks().forEach(track => track.stop());
-      console.log("✅ Microphone permission granted");
-    } catch (err) {
-      console.error("🔒 Microphone permission denied:", err);
-      setStartError("Microphone permission denied. Please allow microphone access to continue.");
-      return;
-    }
-
-    setStartError("");
-    setInterviewStarted(true);
-    console.log("✅ Interview started");
-
-    await speakText(
-      `Hi ${userName}, I am ${voiceGender === "male" ? "David" : "Jennie"
-      }. It's great to meet you today. I hope you're feeling confident and ready.`
-    );
-
-    if (mode === "Technical") {
-      await speakText(
-        "Today we'll be conducting a technical interview. I'll ask you questions related to your technical knowledge, problem-solving skills, and project experience. Take your time, explain your thought process clearly, and answer each question one at a time. Let's begin."
-      );
-    } else {
-      await speakText(
-        "Today we'll be conducting an HR interview. I'll ask you questions about your background, communication skills, teamwork, career goals, and professional experiences. Answer naturally and be yourself. Let's begin."
-      );
-    }
-
-    setIsIntroPhase(false);
-
-    if (questions?.length > 0) {
-      setCurrentIndex(0);
-      
-      await speakText(questions[0]?.question);
-
-      console.log("⏳ Waiting 400ms after AI speech...");
-      await new Promise(r => setTimeout(r, 400));
-
-      clearTranscript();
-
-      setTimeLeft(questions[0]?.timeLimit || 60);
-      setElapsedTime(0); // reset elapsed time for first question
-      setTimerRunning(true);
-      timerTriggeredRef.current = false;
-
-      startRecognition();
-    }
-  }, [interviewStarted, mode, questions, selectedVoice, speakText, userName, voiceGender, startRecognition, clearTranscript, voicesLoaded]);
-
   useEffect(() => {
     if (!timerRunning || !hasQuestions) {
       if (timerIntervalRef.current) {
@@ -661,6 +773,17 @@ function Step2({ interviewData, onFinish }) {
     setTimerRunning(false);
     window.speechSynthesis.cancel();
     
+    // Exit fullscreen
+    try {
+      if (document.exitFullscreen) {
+        await document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        await document.webkitExitFullscreen();
+      }
+    } catch (e) {
+      console.error("Failed to exit fullscreen:", e);
+    }
+    
     try {
       const result = await axios.post(
         `${ServerUrl}/api/interview/finish`,
@@ -672,7 +795,7 @@ function Step2({ interviewData, onFinish }) {
       console.log("✅ Interview finished successfully:", result.data);
       if (onFinish) onFinish(result.data);
     } catch (e) {
-      console.log("Finishing error: ", e);
+      console.log("Finishing error:", e);
       if (onFinish) {
         onFinish({ interviewId, questions, error: e?.message || "Finish request failed" });
       }
@@ -742,7 +865,7 @@ function Step2({ interviewData, onFinish }) {
         clearTranscript();
 
         // 11. Reset and start timer
-        setTimeLeft(questions[nextIndex]?.timeLimit || 60);
+        setTimeLeft(questions[nextIndex]?.timeLimit || 180);
         setElapsedTime(0); // reset elapsed time
         setTimerRunning(true);
 
@@ -939,7 +1062,7 @@ function Step2({ interviewData, onFinish }) {
                   <circle
                     cx="64"
                     cy="64"
-                    r={radius}
+                    r={45}
                     stroke="#e5e7eb"
                     strokeWidth="7"
                     fill="none"
@@ -949,13 +1072,13 @@ function Step2({ interviewData, onFinish }) {
                   <motion.circle
                     cx="64"
                     cy="64"
-                    r={radius}
+                    r={45}
                     stroke={timerColor}
                     strokeWidth="7"
                     fill="none"
-                    strokeDasharray={circumference}
+                    strokeDasharray={2 * Math.PI * 45}
                     strokeDashoffset={
-                      circumference - progress
+                      2 * Math.PI * 45 - progress
                     }
                     strokeLinecap="round"
                     animate={{
@@ -979,7 +1102,7 @@ function Step2({ interviewData, onFinish }) {
                       : "text-red-600"
                     }`}
                   >
-                    {elapsedTime}s
+                    {Math.floor(elapsedTime / 60)}:{String(elapsedTime % 60).padStart(2, '0')}
                   </motion.span>
 
                   <span className="text-xs text-gray-500">
@@ -1067,13 +1190,25 @@ function Step2({ interviewData, onFinish }) {
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={startInterview}
-                disabled={!!startError}
+                disabled={!!startError || isRequestingFullscreen}
                 className="px-12 py-6 bg-black hover:bg-gray-900 text-white font-bold text-xl rounded-2xl shadow-2xl disabled:opacity-50"
               >
-                Start Interview
+                {isRequestingFullscreen ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Preparing Interview...
+                  </div>
+                ) : (
+                  "Start Interview"
+                )}
               </motion.button>
               {startError && (
-                <p className="text-red-500 text-sm">{startError}</p>
+                <div className="bg-red-50 border border-red-200 p-4 rounded-xl max-w-md">
+                  <p className="text-red-800 text-sm font-medium flex items-center gap-2">
+                    <FaExclamationTriangle />
+                    {startError}
+                  </p>
+                </div>
               )}
             </div>
           )}
@@ -1236,8 +1371,50 @@ function Step2({ interviewData, onFinish }) {
             </div>
           )}
         </motion.div>
-
       </div>
+
+      {/* Fullscreen Warning Modal */}
+      <AnimatePresence>
+        {showWarning && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full"
+            >
+              <div className="flex items-center gap-4 mb-6">
+                <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center flex-shrink-0">
+                  <FaExclamationTriangle className="text-yellow-600 text-xl" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-800">
+                  Attention Required
+                </h2>
+              </div>
+              <p className="text-gray-600 mb-8 text-center">
+                {warningMessage}
+              </p>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={async () => {
+                  await requestFullscreen();
+                  if (checkFullscreen()) {
+                    setShowWarning(false);
+                  }
+                }}
+                className="w-full py-4 bg-black hover:bg-gray-900 text-white font-bold rounded-2xl shadow-lg"
+              >
+                Return to Full Screen
+              </motion.button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

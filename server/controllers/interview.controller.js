@@ -245,7 +245,7 @@ Question 8 → Hard
             questions: questionsArray.map((q, index) => ({
                 question: q,
                 difficulty: ["easy", "easy", "easy", "medium", "medium", "medium", "hard", "hard"][index],
-                timeLimit: [60, 60, 60, 90, 90, 90, 120, 120][index],
+                timeLimit: [180, 180, 180, 300, 300, 300, 480, 480][index], // 3min, 5min, 8min in seconds
             })),
         });
 
@@ -477,6 +477,37 @@ export const getMyInterview = async (req, res) => {
     }
 }
 
+export const recordInterviewActivity = async (req, res) => {
+    try {
+        const { interviewId, type, details } = req.body;
+
+        const interview = await Interview.findById(interviewId);
+
+        if (!interview) {
+            return res.status(404).json({
+                message: "Interview not found.",
+            });
+        }
+
+        interview.activityEvents.push({
+            type,
+            details
+        });
+
+        await interview.save();
+
+        return res.status(200).json({
+            success: true,
+            message: "Activity recorded successfully"
+        });
+    } catch (e) {
+        console.error("Record Interview Activity Error:", e);
+        return res.status(500).json({
+            message: e.message,
+        });
+    }
+};
+
 export const getInterviewReport = async (req, res) => {
     try {
         const interview = await Interview.findById(req.params.id);
@@ -555,6 +586,8 @@ export const getInterviewReport = async (req, res) => {
                 correctness: q.correctness || 0,
                 technical: q.technical || 0,
             })),
+            
+            activityEvents: interview.activityEvents || []
         });
     } catch (e) {
         console.error("Interview Report Error:", e);
