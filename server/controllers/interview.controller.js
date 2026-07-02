@@ -360,6 +360,7 @@ export const submitAnswer = async (req, res) => {
         console.log("parsed")
 
         question.answer = answer;
+        question.timeTaken = timeTaken || 0; // save time taken
         question.confidence = parsed.confidence;
         question.communication = parsed.communication;
         question.correctness = parsed.correctness;
@@ -443,6 +444,8 @@ export const finishInterview = async (req, res) => {
 
             questionWiseScore: interview.questions.map((q) => ({
                 question: q.question,
+                answer: q.answer,
+                timeTaken: q.timeTaken || 0,
                 score: q.score || 0,
                 feedback: q.feedback || "",
                 confidence: q.confidence || 0,
@@ -544,6 +547,7 @@ export const getInterviewReport = async (req, res) => {
             questionWiseScore: interview.questions.map((q) => ({
                 question: q.question,
                 answer: q.answer,
+                timeTaken: q.timeTaken || 0,
                 score: q.score || 0,
                 feedback: q.feedback || "",
                 confidence: q.confidence || 0,

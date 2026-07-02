@@ -1,4 +1,4 @@
-﻿﻿import { useState, useEffect, useRef, useCallback } from "react";
+﻿﻿﻿﻿﻿﻿﻿﻿﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { ServerUrl } from "../utils/constants";
@@ -17,6 +17,7 @@ function Step2({ interviewData, onFinish }) {
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState("");
   const [timeLeft, setTimeLeft] = useState(60);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const [selectedVoice, setSelectedVoice] = useState(null);
   const [isSubmmiting, setIsSubmmiting] = useState(false);
   const [subtitle, setSubtitle] = useState("");
@@ -55,6 +56,18 @@ function Step2({ interviewData, onFinish }) {
 
   const currentQuestion = questions[currentIndex];
   const totalQuestions = questions.length;
+
+  // Calculate timer stage
+  const getTimerStage = () => {
+    if (!currentQuestion) return 'green';
+    const timeLimit = currentQuestion.timeLimit || 60;
+    const percentage = (elapsedTime / timeLimit) * 100;
+    if (percentage <= 100) return 'green';
+    if (percentage <= 125) return 'yellow';
+    return 'red';
+  };
+
+  const timerStage = getTimerStage();
 
 
   // ============================================================================
@@ -416,21 +429,23 @@ function Step2({ interviewData, onFinish }) {
 
   const questionTimeLimit =
     currentQuestion?.timeLimit || 60;
-  const percentage = (timeLeft / questionTimeLimit) * 100;
+  const elapsedPercentage = (elapsedTime / questionTimeLimit) * 100;
 
+  // Timer color based on stage
   const timerColor =
-    percentage > 60
-      ? "#10b981" // green
-      : percentage > 30
-        ? "#f59e0b" // orange
-        : "#ef4444"; // red
+    timerStage === 'green'
+      ? "#10b981"
+      : timerStage === 'yellow'
+      ? "#f59e0b"
+      : "#ef4444";
 
+  // Progress is based on elapsed time
   const progress =
     Math.max(
       0,
       Math.min(
         circumference,
-        (timeLeft / questionTimeLimit) *
+        (elapsedPercentage / 100) *
         circumference
       )
     );
@@ -608,6 +623,7 @@ function Step2({ interviewData, onFinish }) {
       clearTranscript();
 
       setTimeLeft(questions[0]?.timeLimit || 60);
+      setElapsedTime(0); // reset elapsed time for first question
       setTimerRunning(true);
       timerTriggeredRef.current = false;
 
@@ -625,14 +641,8 @@ function Step2({ interviewData, onFinish }) {
     }
 
     timerIntervalRef.current = setInterval(() => {
-      setTimeLeft((prevTimeLeft) => {
-        if (prevTimeLeft <= 1 && !timerTriggeredRef.current) {
-          timerTriggeredRef.current = true;
-          submitAnswer();
-          return 0;
-        }
-        return prevTimeLeft - 1;
-      });
+      setTimeLeft((prevTimeLeft) => prevTimeLeft - 1);
+      setElapsedTime((prevElapsed) => prevElapsed + 1);
     }, 1000);
 
     return () => {
@@ -690,9 +700,7 @@ function Step2({ interviewData, onFinish }) {
           interviewId,
           questionIndex: currentIndex,
           answer,
-          timeTaken:
-            (currentQuestion?.timeLimit || 60) -
-            timeLeft,
+          timeTaken: elapsedTime,
         },
         {
           withCredentials: true,
@@ -735,6 +743,7 @@ function Step2({ interviewData, onFinish }) {
 
         // 11. Reset and start timer
         setTimeLeft(questions[nextIndex]?.timeLimit || 60);
+        setElapsedTime(0); // reset elapsed time
         setTimerRunning(true);
 
         // 12. Start recognition
@@ -884,6 +893,30 @@ function Step2({ interviewData, onFinish }) {
         
 
             <div className="flex-1 min-h-0" />
+
+            {/* Timer Warning Messages */}
+            {timerStage === 'yellow' && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-2xl text-center"
+              >
+                <p className="text-yellow-800 text-sm font-medium">
+                  You've exceeded the recommended time. You can continue if needed.
+                </p>
+              </motion.div>
+            )}
+            {timerStage === 'red' && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-4 p-3 bg-red-50 border border-red-200 rounded-2xl text-center"
+              >
+                <p className="text-red-800 text-sm font-medium">
+                  This question has taken significantly longer than recommended. Your submission is still accepted, but time will be considered in the evaluation.
+                </p>
+              </motion.div>
+            )}
 
             <div className="flex justify-center  mb-8">
               <motion.div
