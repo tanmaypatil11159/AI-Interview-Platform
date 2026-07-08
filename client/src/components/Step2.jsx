@@ -1,4 +1,4 @@
-﻿﻿﻿﻿import { useState, useEffect, useRef, useCallback } from "react";
+﻿﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { ServerUrl } from "../utils/constants";
@@ -7,7 +7,6 @@ import maleVideo from "../assets/male-ai.mp4";
 import { FaMicrophone, FaMicrophoneSlash, FaExclamationTriangle } from "react-icons/fa";
 
 function Step2({ interviewData, onFinish }) {
-
   const { interviewId, questions = [], userName, mode } = interviewData || {};
   const voiceGender = "male";
 
@@ -31,30 +30,15 @@ function Step2({ interviewData, onFinish }) {
   const [showWarning, setShowWarning] = useState(false);
   const [warningMessage, setWarningMessage] = useState("");
   const recognitionRef = useRef(null);
-  
   const finalTranscriptRef = useRef("");
-  
   const timerTriggeredRef = useRef(false);
-  
   const videoRef = useRef(null);
-  
   const isMountedRef = useRef(true);
-  
   const isAISpeakingRef = useRef(false);
-  
-  // Track recognition state to prevent multiple start() calls
   const isRecognitionActiveRef = useRef(false);
-  
-  // Track if manual recording toggle is paused
   const isManualPauseRef = useRef(false);
-
-  // Timer interval ref to prevent multiple interval timers
   const timerIntervalRef = useRef(null);
-
-  // Keep-alive interval ref for speech synthesis
   const speechKeepAliveRef = useRef(null);
-
-  // Track restart attempts to prevent infinite loops
   const restartAttemptsRef = useRef(0);
   const MAX_RESTART_ATTEMPTS = 3;
 
@@ -223,11 +207,7 @@ function Step2({ interviewData, onFinish }) {
     requestFullscreen
   ]);
 
-  // ============================================================================
   // INITIALIZATION: SETUP SPEECH RECOGNITION ONCE FOR ENTIRE LIFECYCLE
-  // ============================================================================
-  // This runs only ONCE when component mounts. SpeechRecognition instance is 
-  // created once and never recreated. All event listeners are attached here.
   useEffect(() => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 
@@ -344,11 +324,6 @@ function Step2({ interviewData, onFinish }) {
       }
     };
 
-    // ========================================================================
-    // EVENT LISTENER: onresult - Process speech recognition results
-    // This is called every time the user speaks. Separates interim from final
-    // results and prevents capturing AI voice in the transcript.
-    // ========================================================================
     recognition.onresult = (event) => {
       console.log(
         `📝 SpeechRecognition result: ${event.results.length} result(s), resultIndex: ${event.resultIndex}`
@@ -357,60 +332,42 @@ function Step2({ interviewData, onFinish }) {
       let interim = "";
       let final = finalTranscriptRef.current;
 
-      // Process all results from resultIndex onwards
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
         const isFinal = event.results[i].isFinal;
 
         if (isFinal) {
-          // Only add to final buffer on confirmed final result
           console.log(`✅ Final result: "${transcript}"`);
           final += transcript + " ";
         } else {
-          // Show interim results in real-time, but don't store permanently
           console.log(`📝 Interim result: "${transcript}"`);
           interim += transcript;
         }
       }
 
-      // Update permanent final transcript buffer (for resume after answer)
       finalTranscriptRef.current = final;
 
-      // Update UI with combined final + interim
       if (isMountedRef.current) {
         setAnswer(final + interim);
       }
     };
 
-    // ========================================================================
-    // EVENT LISTENER: onaudiostart - Audio capture started
-    // ========================================================================
     recognition.onaudiostart = () => {
       console.log("🎤 Audio capture started");
     };
 
-    // ========================================================================
-    // EVENT LISTENER: onspeechstart - Speech detected (distinguished from noise)
-    // ========================================================================
     recognition.onspeechstart = () => {
       console.log("🗣️  Speech detected");
     };
 
-    // ========================================================================
-    // EVENT LISTENER: onnomatch - No recognized speech pattern
-    // ========================================================================
     recognition.onnomatch = () => {
       console.warn("⚠️  No speech match detected");
     };
 
-    // Store the configured recognition instance
     recognitionRef.current = recognition;
 
     console.log("🎤 ✅ SpeechRecognition setup complete with all event listeners");
 
-    // ========================================================================
-    // CLEANUP: Remove listeners and stop recognition on unmount
-    // ========================================================================
     return () => {
       console.log("🧹 Cleaning up SpeechRecognition on unmount");
       isMountedRef.current = false;
@@ -424,12 +381,9 @@ function Step2({ interviewData, onFinish }) {
         }
       }
     };
-  }, []); // Empty dependency - runs once on mount
+  }, []);
 
-  // ============================================================================
   // INITIALIZATION: LOAD VOICES FOR SPEECH SYNTHESIS
-  // ============================================================================
-  // Voices load asynchronously in most browsers. Wait until ready before starting.
   useEffect(() => {
     const loadVoices = () => {
       const voices = window.speechSynthesis.getVoices();
@@ -448,7 +402,6 @@ function Step2({ interviewData, onFinish }) {
 
       let selectedVoiceCandidate;
 
-      // Select voice based on gender preference
       if (voiceGender === "male") {
         selectedVoiceCandidate =
           voices.find((v) => v.name.includes("David")) ||
@@ -461,7 +414,6 @@ function Step2({ interviewData, onFinish }) {
           voices.find((v) => v.name.includes("Susan"));
       }
 
-      // Fallback: use default voice or first available English voice, then first voice
       const finalVoice =
         selectedVoiceCandidate ||
         voices.find((v) => v.default) ||
@@ -478,7 +430,6 @@ function Step2({ interviewData, onFinish }) {
 
     loadVoices();
 
-    // Handle async voice loading - some browsers fire this event
     const voicesChangedListener = () => {
       console.log("🔄 Voices changed event fired - rechecking voices");
       loadVoices();
@@ -491,13 +442,10 @@ function Step2({ interviewData, onFinish }) {
     };
   }, [voiceGender]);
 
-  // ============================================================================
   // FULLSCREEN & ACTIVITY LISTENERS
-  // ============================================================================
   useEffect(() => {
     if (!interviewStarted) return;
 
-    // Handle fullscreen change
     const handleFullscreenChange = () => {
       const isCurrentlyFullscreen = checkFullscreen();
       setIsFullscreen(isCurrentlyFullscreen);
@@ -510,7 +458,6 @@ function Step2({ interviewData, onFinish }) {
       }
     };
 
-    // Handle tab visibility change
     const handleVisibilityChange = () => {
       if (document.hidden && interviewStarted) {
         console.log("⚠️  Tab switched");
@@ -520,7 +467,6 @@ function Step2({ interviewData, onFinish }) {
       }
     };
 
-    // Handle window blur
     const handleWindowBlur = () => {
       if (interviewStarted) {
         console.log("⚠️  Window blurred");
@@ -530,7 +476,6 @@ function Step2({ interviewData, onFinish }) {
       }
     };
 
-    // Listen to events
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
     document.addEventListener("mozfullscreenchange", handleFullscreenChange);
@@ -538,7 +483,6 @@ function Step2({ interviewData, onFinish }) {
     document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("blur", handleWindowBlur);
 
-    // Check initial fullscreen state
     handleFullscreenChange();
 
     return () => {
@@ -551,9 +495,6 @@ function Step2({ interviewData, onFinish }) {
     };
   }, [interviewStarted, checkFullscreen, recordActivity]);
 
-  // ============================================================================
-  // HELPER: Safe recognition start (prevents InvalidStateError)
-  // ============================================================================
   const startRecognition = useCallback(() => {
     const recognition = recognitionRef.current;
 
@@ -576,22 +517,18 @@ function Step2({ interviewData, onFinish }) {
       console.log("🎤 Starting recognition...");
       isManualPauseRef.current = false;
       recognition.start();
-      restartAttemptsRef.current = 0; // Reset restart counter on successful start
+      restartAttemptsRef.current = 0;
     } catch (error) {
       if (error.name === "InvalidStateError") {
         console.warn(
           "⚠️  InvalidStateError: Recognition already running or in progress"
         );
-        // This is expected in some edge cases, just log and continue
       } else {
         console.error("❌ Error starting recognition:", error);
       }
     }
   }, []);
 
-  // ============================================================================
-  // HELPER: Safe recognition stop
-  // ============================================================================
   const stopRecognition = useCallback(() => {
     const recognition = recognitionRef.current;
 
@@ -613,9 +550,6 @@ function Step2({ interviewData, onFinish }) {
     }
   }, []);
 
-  // ============================================================================
-  // HELPER: Toggle recording manually
-  // ============================================================================
   const toggleRecording = useCallback(() => {
     if (isRecording) {
       console.log("🎤 Pausing recognition manually");
@@ -628,18 +562,12 @@ function Step2({ interviewData, onFinish }) {
     }
   }, [isRecording, startRecognition, stopRecognition]);
 
-  // ============================================================================
-  // HELPER: Clear transcript buffer between questions
-  // ============================================================================
   const clearTranscript = useCallback(() => {
     console.log("🧹 Clearing transcript buffer");
     finalTranscriptRef.current = "";
     setAnswer("");
   }, []);
 
-  // ============================================================================
-  // SPEECH SYNTHESIS - SAFE & CONTROLLED
-  // ============================================================================
   const speakText = useCallback((text) => {
     return new Promise((resolve) => {
       if (!window.speechSynthesis) {
@@ -650,13 +578,8 @@ function Step2({ interviewData, onFinish }) {
 
       console.log(`🔊 AI speaking: "${text.substring(0, 100)}${text.length > 100 ? "..." : ""}"`);
 
-      // Cancel any existing speech first to prevent overlap
       window.speechSynthesis.cancel();
-
-      // Mark AI as speaking - stops recognition to prevent capturing AI's own voice
       isAISpeakingRef.current = true;
-
-      // Stop recognition immediately when AI starts speaking
       stopRecognition();
 
       const humanText = text
@@ -680,7 +603,6 @@ function Step2({ interviewData, onFinish }) {
           setSubtitle(text);
         }
 
-        // Reset and start avatar video with looping
         if (videoRef.current) {
           videoRef.current.currentTime = 0;
           videoRef.current.loop = true;
@@ -689,7 +611,6 @@ function Step2({ interviewData, onFinish }) {
           });
         }
 
-        // Keep speech synthesis alive to prevent pausing
         speechKeepAliveRef.current = setInterval(() => {
           if (!isAISpeakingRef.current) {
             clearInterval(speechKeepAliveRef.current);
@@ -697,13 +618,12 @@ function Step2({ interviewData, onFinish }) {
           }
           window.speechSynthesis.pause();
           window.speechSynthesis.resume();
-        }, 14000); // Just under 15 seconds, which is a common timeout
+        }, 14000);
       };
 
       utterance.onend = () => {
         console.log("🔊 AI finished speaking");
         isAISpeakingRef.current = false;
-        // Clear the keep-alive interval
         if (speechKeepAliveRef.current) {
           clearInterval(speechKeepAliveRef.current);
           speechKeepAliveRef.current = null;
@@ -714,7 +634,6 @@ function Step2({ interviewData, onFinish }) {
           setSubtitle("");
         }
 
-        // Pause and reset avatar video
         if (videoRef.current) {
           videoRef.current.loop = false;
           videoRef.current.pause();
@@ -763,17 +682,15 @@ function Step2({ interviewData, onFinish }) {
         timerIntervalRef.current = null;
       }
     };
-  }, [timerRunning, hasQuestions]); // Removed submitAnswer from dependencies to avoid closure issues
+  }, [timerRunning, hasQuestions]);
 
   const finishInterview = useCallback(async () => {
     console.log("🏁 Finishing interview...");
     
-    // Cleanup before finishing
     stopRecognition();
     setTimerRunning(false);
     window.speechSynthesis.cancel();
     
-    // Exit fullscreen
     try {
       if (document.exitFullscreen) {
         await document.exitFullscreen();
@@ -810,13 +727,9 @@ function Step2({ interviewData, onFinish }) {
     try {
       setIsSubmmiting(true);
 
-      // 1. Stop recognition immediately
       stopRecognition();
-      
-      // 2. Stop timer
       setTimerRunning(false);
 
-      // 3. Submit answer to backend
       const result = await axios.post(
         `${ServerUrl}/api/interview/submit-answer`,
         {
@@ -832,44 +745,35 @@ function Step2({ interviewData, onFinish }) {
       console.log("✅ Answer submitted, feedback received:", result.data);
       setFeedback(result.data.feedback);
 
-      // 4. AI speaks feedback
       if (result.data.feedback) {
         await speakText(result.data.feedback);
       }
 
-      // 5. Last question logic
       if (currentIndex === totalQuestions - 1) {
         await speakText("That concludes our interview. Thank you for taking the time to speak with me today. I appreciate your thoughtful responses and the effort you put into each question. Your interview has been successfully completed, and your performance report is now being generated. I wish you all the best in your future endeavors. Have a great day!");
         await finishInterview();
       } else {
-        // 6. Wait 1.5s, then move to next question
         console.log("⏳ Waiting 1.5s before next question...");
         await new Promise(r => setTimeout(r, 1500));
         
         const nextIndex = currentIndex + 1;
 
-        // 7. Reset UI
         setAnswer("");
         setFeedback("");
         timerTriggeredRef.current = false;
         setCurrentIndex(nextIndex);
 
-        // 8. AI speaks next question
         await speakText(questions[nextIndex]?.question);
 
-        // 9. Wait 400ms after AI finishes
         console.log("⏳ Waiting 400ms after AI speech...");
         await new Promise(r => setTimeout(r, 400));
 
-        // 10. Clear transcript
         clearTranscript();
 
-        // 11. Reset and start timer
         setTimeLeft(questions[nextIndex]?.timeLimit || 180);
-        setElapsedTime(0); // reset elapsed time
+        setElapsedTime(0);
         setTimerRunning(true);
 
-        // 12. Start recognition
         startRecognition();
       }
     } catch (error) {
@@ -889,14 +793,12 @@ function Step2({ interviewData, onFinish }) {
       console.log("🧹 Component unmounting - cleaning up all resources");
       isMountedRef.current = false;
       
-      // Stop speech synthesis and clear keep-alive interval
       window.speechSynthesis.cancel();
       if (speechKeepAliveRef.current) {
         clearInterval(speechKeepAliveRef.current);
         speechKeepAliveRef.current = null;
       }
 
-      // Stop recognition
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
@@ -906,7 +808,6 @@ function Step2({ interviewData, onFinish }) {
         }
       }
 
-      // Clear timer
       if (timerIntervalRef.current) {
         clearInterval(timerIntervalRef.current);
       }
@@ -921,7 +822,6 @@ function Step2({ interviewData, onFinish }) {
     >
       <div className="h-full grid grid-cols-[340px_minmax(0,1fr)] gap-4">
 
-        {/* LEFT PANEL */}
         <motion.div
           initial={{ x: -80, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
@@ -929,7 +829,6 @@ function Step2({ interviewData, onFinish }) {
           className="flex flex-col gap-4 h-full min-h-0"
         >
 
-          {/* AI Avatar */}
           <motion.div
             whileHover={{ scale: 1.02 }}
             className="bg-white rounded-3xl overflow-hidden shadow-sm scale-99"
@@ -982,7 +881,6 @@ function Step2({ interviewData, onFinish }) {
             )}
           </AnimatePresence>
 
-          {/* Status Card */}
           <motion.div
             transition={{
               duration: 3,
@@ -1015,7 +913,6 @@ function Step2({ interviewData, onFinish }) {
 
             <div className="flex-1 min-h-0" />
 
-            {/* Timer Warning Messages */}
             {timerStage === 'yellow' && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
@@ -1058,7 +955,6 @@ function Step2({ interviewData, onFinish }) {
                   className="w-full h-full -rotate-90"
                   viewBox="0 0 128 128"
                 >
-                  {/* Background Ring */}
                   <circle
                     cx="64"
                     cy="64"
@@ -1067,8 +963,6 @@ function Step2({ interviewData, onFinish }) {
                     strokeWidth="7"
                     fill="none"
                   />
-
-                  {/* Progress Ring */}
                   <motion.circle
                     cx="64"
                     cy="64"
@@ -1104,13 +998,11 @@ function Step2({ interviewData, onFinish }) {
                   >
                     {Math.floor(elapsedTime / 60)}:{String(elapsedTime % 60).padStart(2, '0')}
                   </motion.span>
-
                   <span className="text-xs text-gray-500">
                     Elapsed
                   </span>
                 </div>
 
-                {/* Pulsing Warning */}
                 {timerStage === 'red' && (
                   <motion.div
                     animate={{
@@ -1138,7 +1030,6 @@ function Step2({ interviewData, onFinish }) {
                   >
                     {currentIndex + 1}
                   </motion.h2>
-
                   <p className="text-sm text-gray-500">
                     current Question
                   </p>
@@ -1148,7 +1039,6 @@ function Step2({ interviewData, onFinish }) {
                   <h2 className="text-2xl font-bold text-emerald-600">
                     {totalQuestions}
                   </h2>
-
                   <p className="text-sm text-gray-500">
                     Total Questions
                   </p>
@@ -1158,14 +1048,12 @@ function Step2({ interviewData, onFinish }) {
           </motion.div>
         </motion.div>
 
-        {/* RIGHT PANEL */}
         <motion.div
           initial={{ x: 80, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
           transition={{ duration: 0.7 }}
           className="relative bg-white rounded-3xl shadow-sm p-6 flex flex-col"
         >
-
 
           <motion.h1
             initial={{ y: -20 }}
@@ -1175,7 +1063,6 @@ function Step2({ interviewData, onFinish }) {
             AI Smart Interview
           </motion.h1>
 
-          {/* Start Interview Button - Large */}
           {!interviewStarted && (
             <div className="flex-1 flex flex-col items-center justify-center gap-6">
               <div className="text-center">
@@ -1247,7 +1134,6 @@ function Step2({ interviewData, onFinish }) {
                 <p className="text-sm text-gray-500">
                   Question {currentIndex + 1} of {totalQuestions}
                 </p>
-
                 <h2 className="text-lg font-semibold mt-2 text-gray-800">
                   {questions[currentIndex]?.question}
                 </h2>
@@ -1278,12 +1164,10 @@ function Step2({ interviewData, onFinish }) {
                   <h3 className="font-semibold text-emerald-700">
                     Interview Feedback
                   </h3>
-
                   <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">
                     AI Generated
                   </span>
                 </div>
-
                 <p className="text-gray-700 text-sm leading-6">
                   {feedback}
                 </p>
@@ -1291,7 +1175,6 @@ function Step2({ interviewData, onFinish }) {
             )}
           </AnimatePresence>
 
-          {/* Answer Area */}
           {interviewStarted && (
             <motion.div
               initial={{ opacity: 0 }}
@@ -1310,8 +1193,6 @@ function Step2({ interviewData, onFinish }) {
 
           {interviewStarted && (
             <div className="flex items-center gap-3 mt-4">
-
-              {/* Microphone Button */}
               <motion.button
                 whileHover={{ scale: 1.08 }}
                 whileTap={{ scale: 0.95 }}
@@ -1354,7 +1235,6 @@ function Step2({ interviewData, onFinish }) {
                 )}
               </motion.button>
 
-              {/* Submit Button */}
               <motion.button
                 whileHover={{ scale: 1.01 }}
                 whileTap={{ scale: 0.98 }}
@@ -1373,7 +1253,6 @@ function Step2({ interviewData, onFinish }) {
         </motion.div>
       </div>
 
-      {/* Fullscreen Warning Modal */}
       <AnimatePresence>
         {showWarning && (
           <motion.div
