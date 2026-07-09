@@ -6,11 +6,16 @@ import Step3 from '../components/Step3';
 function Interview() {
     const [step, setStep] = useState(1);
     const [interviewData, setInterviewData] = useState(null);
+    
+    console.log("Interview.jsx current step:", step);
+    console.log("Interview.jsx interviewData:", interviewData);
+    
   return (
     <div>
 
       {step === 1 && (
         <Step1 onStart={(data) => {
+            console.log("Interview.jsx onStart called with data:", data);
             setInterviewData(data)
             setStep(2)
         }}  />

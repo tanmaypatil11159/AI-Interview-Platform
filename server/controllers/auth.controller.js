@@ -1,6 +1,27 @@
 import User from "../model/user.model.js";
 import genToken from "../config/token.js";
 
+export const testAuth = async (req, res) => {
+    try {
+        const email = "test@example.com";
+        let user = await User.findOne({ email });
+        if (!user) {
+            user = await User.create({ email, name: "Test User" });
+        }
+        const token = await genToken(user._id);
+        res.cookie("token", token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+        return res.status(200).json({ user, token });
+    } catch (error) {
+        console.error("Test auth error:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+};
+
 export const googleAuth = async (req, res) => {
     try {
         const { name, email } = req.body;

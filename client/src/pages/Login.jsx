@@ -44,7 +44,27 @@ function Login() {
       console.error("Google authentication failed:", error);
       dispatch(setUserData(null));
     }
-  }
+  };
+
+  const handleTestAuth = async () => {
+    try {
+      const result = await axios.post(ServerUrl + "/api/auth/test", {}, {
+        withCredentials: true,
+      });
+      const user = result.data?.user || result.data;
+      if (result.data?.token) {
+        localStorage.setItem("token", result.data.token);
+      }
+      dispatch(setUserData(user));
+      if (result.status === 200) {
+        console.log("Test login successful:", result.data);
+        navigate("/");
+      }
+    } catch (error) {
+      console.error("Test authentication failed:", error);
+      dispatch(setUserData(null));
+    }
+  };
 
 
   const containerVariants = {
@@ -156,6 +176,23 @@ function Login() {
         </motion.p>
 
         <motion.button
+          onClick={handleTestAuth}
+          variants={itemVariants}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          whileHover={{
+            scale: 1.03,
+            boxShadow: "0px 10px 30px rgba(0,0,0,0.15)",
+          }}
+          whileTap={{ scale: 0.97 }}
+          className="mt-4 w-full flex items-center justify-center gap-3 bg-purple-600 text-white py-3 px-6 rounded-full overflow-hidden relative"
+        >
+          <span className="relative z-10 font-medium">
+            Test Login (Dev Only)
+          </span>
+        </motion.button>
+
+        <motion.button
           onClick={handleGoogleAuth}
           variants={itemVariants}
           initial={{ opacity: 0, y: 20 }}
@@ -167,8 +204,6 @@ function Login() {
           whileTap={{ scale: 0.97 }}
           className="mt-4 w-full flex items-center justify-center gap-3 bg-black text-white py-3 px-6 rounded-full overflow-hidden relative"
         >
-
-
           <motion.div
             animate={{
               x: ["-150%", "250%"],
@@ -180,9 +215,7 @@ function Login() {
             }}
             className="absolute top-0 left-0 h-full w-16  skew-x-12"
           />
-
           <FcGoogle className="text-2xl relative z-10" />
-
           <span className="relative z-10 font-medium">
             Continue with Google
           </span>
