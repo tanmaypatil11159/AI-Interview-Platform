@@ -11,12 +11,9 @@ export const AnalyzeResume = async (req, res) => {
         }
 
         let fileBuffer;
-        const filePath = req.file.path;
 
         if (req.file.buffer && req.file.buffer.length) {
             fileBuffer = Buffer.from(req.file.buffer);
-        } else if (filePath) {
-            fileBuffer = await fs.promises.readFile(filePath);
         } else {
             return res.status(400).json({ message: "Resume file content is empty" });
         }
@@ -63,10 +60,6 @@ export const AnalyzeResume = async (req, res) => {
         console.log(messages)
         const parsed = JSON.parse(aiResponce)
 
-        if (filePath && fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
-        }
-
         res.json({
             role: parsed.role,
             experience: parsed.experience,
@@ -76,10 +69,6 @@ export const AnalyzeResume = async (req, res) => {
         })
     } catch (error) {
         console.log(error)
-
-        if (req.file?.path && fs.existsSync(req.file.path)) {
-            fs.unlinkSync(req.file.path);
-        }
 
         return res.status(500).json({
             message: error.message,

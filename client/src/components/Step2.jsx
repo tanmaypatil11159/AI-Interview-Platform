@@ -1,4 +1,4 @@
-﻿﻿﻿import { useState, useEffect, useRef, useCallback } from "react";
+﻿﻿﻿﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { ServerUrl } from "../utils/constants";
@@ -346,6 +346,13 @@ function Step2({ interviewData, onFinish }) {
     voicesLoaded,
     requestFullscreen
   ]);
+
+  // Auto-start interview when interviewData is available
+  useEffect(() => {
+    if (interviewData && !interviewStarted) {
+      startInterview();
+    }
+  }, [interviewData, interviewStarted, startInterview]);
 
   // INITIALIZATION: SETUP SPEECH RECOGNITION ONCE FOR ENTIRE LIFECYCLE
   useEffect(() => {
