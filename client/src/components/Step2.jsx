@@ -1,4 +1,4 @@
-﻿﻿﻿﻿import { useState, useEffect, useRef, useCallback } from "react";
+﻿﻿﻿﻿﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { ServerUrl } from "../utils/constants";
@@ -260,69 +260,64 @@ function Step2({ interviewData, onFinish }) {
 
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
-    // Temporarily disable speech recognition check for testing
-    // if (!SpeechRecognition) {
-    //   setStartError("Speech recognition is not supported in this browser. Please use Chrome, Edge, or Brave.");
-    //   return;
-    // }
+    if (!SpeechRecognition) {
+      setStartError("Speech recognition is not supported in this browser. Please use Chrome, Edge, or Brave.");
+      return;
+    }
 
-    // Temporarily skip voice and microphone checks for testing
-    // if (!window.speechSynthesis || typeof window.speechSynthesis.speak !== "function") {
-    //   setStartError("Speech synthesis is not available in this browser.");
-    //   return;
-    // }
+    if (!window.speechSynthesis || typeof window.speechSynthesis.speak !== "function") {
+      setStartError("Speech synthesis is not available in this browser.");
+      return;
+    }
 
-    // if (!voicesLoaded || !selectedVoice) {
-    //   setStartError("Voice setup is still loading. Please try again in a moment.");
-    //   return;
-    // }
+    if (!voicesLoaded || !selectedVoice) {
+      setStartError("Voice setup is still loading. Please try again in a moment.");
+      return;
+    }
 
-    // try {
-    //   console.log("Requesting microphone permission...");
-    //   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    //   stream.getTracks().forEach((track) => track.stop());
-    //   console.log("Microphone permission granted");
-    // } catch (err) {
-    //   console.error("Microphone permission denied:", err);
-    //   setStartError("Microphone permission denied. Please allow microphone access to continue.");
-    //   return;
-    // }
+    try {
+      console.log("Requesting microphone permission...");
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track) => track.stop());
+      console.log("Microphone permission granted");
+    } catch (err) {
+      console.error("Microphone permission denied:", err);
+      setStartError("Microphone permission denied. Please allow microphone access to continue.");
+      return;
+    }
 
-    // Also skip fullscreen for testing
-    // setIsRequestingFullscreen(true);
-    // const fullscreenSuccess = await requestFullscreen();
-    // setIsRequestingFullscreen(false);
+    setIsRequestingFullscreen(true);
+    const fullscreenSuccess = await requestFullscreen();
+    setIsRequestingFullscreen(false);
 
-    // if (!fullscreenSuccess) {
-    //   setStartError("Full Screen Mode is required to continue your interview. Please enable Full Screen Mode and try again.");
-    //   return;
-    // }
+    if (!fullscreenSuccess) {
+      setStartError("Full Screen Mode is required to continue your interview. Please enable Full Screen Mode and try again.");
+      return;
+    }
 
     setStartError("");
     setInterviewStarted(true);
     console.log("Interview started");
 
-    // Skip speaking text for testing
-    // await speakText(
-    //   `Hi ${userName}, I am ${voiceGender === "male" ? "David" : "Jennie"}. It's great to meet you today. I hope you're feeling confident and ready.`
-    // );
+    await speakText(
+      `Hi ${userName}, I am ${voiceGender === "male" ? "David" : "Jennie"}. It's great to meet you today. I hope you're feeling confident and ready.`
+    );
 
-    // if (mode === "Technical") {
-    //   await speakText(
-    //     "Today we'll be conducting a technical interview. I'll ask you questions related to your technical knowledge, problem solving skills, and project experience. Take your time, explain your thought process clearly, and answer each question one at a time. Let's begin."
-    //   );
-    // } else {
-    //   await speakText(
-    //     "Today we'll be conducting an HR interview. I'll ask you questions about your background, communication skills, teamwork, career goals, and professional experiences. Answer naturally and be yourself. Let's begin."
-    //   );
-    // }
+    if (mode === "Technical") {
+      await speakText(
+        "Today we'll be conducting a technical interview. I'll ask you questions related to your technical knowledge, problem solving skills, and project experience. Take your time, explain your thought process clearly, and answer each question one at a time. Let's begin."
+      );
+    } else {
+      await speakText(
+        "Today we'll be conducting an HR interview. I'll ask you questions about your background, communication skills, teamwork, career goals, and professional experiences. Answer naturally and be yourself. Let's begin."
+      );
+    }
 
     setIsIntroPhase(false);
 
     if (questions?.length > 0) {
       setCurrentIndex(0);
-      // Skip speaking question for testing
-      // await speakText(questions[0]?.question);
+      await speakText(questions[0]?.question);
       console.log("Waiting 400ms...");
       await new Promise((r) => setTimeout(r, 400));
       clearTranscript();
@@ -330,8 +325,7 @@ function Step2({ interviewData, onFinish }) {
       setElapsedTime(0);
       setTimerRunning(true);
       timerTriggeredRef.current = false;
-      // Skip starting recognition for testing
-      // startRecognition();
+      startRecognition();
     }
   }, [
     interviewStarted,
