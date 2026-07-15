@@ -6,19 +6,11 @@ import Interview from "../model/interview.model.js";
 
 export const AnalyzeResume = async (req, res) => {
     try {
-        if (!req.file) {
+        if (!req.file || !req.file.buffer) {
             return res.status(400).json({ message: "Resume pdf is required" });
         }
 
-        let fileBuffer;
-
-        if (req.file.buffer && req.file.buffer.length) {
-            fileBuffer = Buffer.from(req.file.buffer);
-        } else {
-            return res.status(400).json({ message: "Resume file content is empty" });
-        }
-
-        const uint8Array = new Uint8Array(fileBuffer);
+        const uint8Array = new Uint8Array(req.file.buffer);
 
         const pdf = await pdfjsLib.getDocument({ data: uint8Array }).promise;
 
@@ -234,7 +226,7 @@ Question 8 → Hard
             questions: questionsArray.map((q, index) => ({
                 question: q,
                 difficulty: ["easy", "easy", "easy", "medium", "medium", "medium", "hard", "hard"][index],
-                timeLimit: [180, 180, 180, 300, 300, 300, 480, 480][index], // 3min, 5min, 8min in seconds
+                timeLimit: [60, 60, 60, 90, 90, 90, 120, 120][index],
             })),
         });
 
@@ -293,14 +285,20 @@ export const submitAnswer = async (req, res) => {
                 content: `
             You are a professional human interviewer evaluating a candidate's answer in a real interview.
 
-            Evaluate naturally and fairly, like a real person would.
+            Evaluate the answer thoroughly and provide detailed feedback.
 
             Score the answer in these areas (0 to 10):
 
             1. Confidence – Does the answer sound clear, confident, and well-presented?
             2. Communication – Is the language simple, clear, and easy to understand?
             3. Correctness – Is the answer accurate, relevant, and complete?
-            4. Technical - Does the candidate demonstrate strong understanding of the technology, concepts, implementation details, and best practices related to the topic?
+            4. Technical - Does the candidate demonstrate strong understanding of the technology, concepts, implementation details, and best practices related to the topic? (Only applicable for Technical interviews, skip or give 0 for HR)
+
+            Provide detailed feedback in these categories:
+
+            1. technicalAccuracy: Detailed explanation of the accuracy of the answer's technical content (or general for HR).
+            2. grammarSuggestions: List any grammar, wording, or clarity improvements the candidate can make.
+            3. areasForImprovement: Specific areas the candidate should focus on improving.
 
             Rules:
             - Be realistic and unbiased.
@@ -313,8 +311,7 @@ export const submitAnswer = async (req, res) => {
             finalScore = average of confidence, communication, and correctness (rounded to nearest whole number).
 
             Feedback Rules:
-            - Write natural human feedback.
-            - 10 to 15 words only.
+            - Write a short, natural 10-15 word human feedback summary.
             - Sound like real interview feedback.
             - Can suggest improvement if needed.
             - Do NOT repeat the question.
@@ -322,14 +319,16 @@ export const submitAnswer = async (req, res) => {
             - Keep tone professional and honest.
 
             Return ONLY valid JSON in this format:
-
             {
             "confidence": number,
             "communication": number,
             "correctness": number,
             "technical": number,
             "finalScore": number,
-            "feedback": "short human feedback"
+            "feedback": "short human feedback",
+            "technicalAccuracy": "detailed technical accuracy feedback",
+            "grammarSuggestions": "grammar and clarity suggestions",
+            "areasForImprovement": "areas for improvement"
             }
             `
             },
@@ -338,6 +337,7 @@ export const submitAnswer = async (req, res) => {
                 content: `
             Question: ${question.question}
             Answer: ${answer}
+            Interview Mode: ${interview.mode}
             `
             }
         ];
@@ -349,17 +349,28 @@ export const submitAnswer = async (req, res) => {
         console.log("parsed")
 
         question.answer = answer;
-        question.timeTaken = timeTaken || 0; // save time taken
+        question.timeTaken = timeTaken || 0;
         question.confidence = parsed.confidence;
         question.communication = parsed.communication;
         question.correctness = parsed.correctness;
         question.technical = parsed.technical;
         question.score = parsed.finalScore;
         question.feedback = parsed.feedback;
+        question.technicalAccuracy = parsed.technicalAccuracy;
+        question.grammarSuggestions = parsed.grammarSuggestions;
+        question.areasForImprovement = parsed.areasForImprovement;
 
         await interview.save();
         return res.status(200).json({
-            feedback: parsed.feedback
+            feedback: parsed.feedback,
+            confidence: parsed.confidence,
+            communication: parsed.communication,
+            correctness: parsed.correctness,
+            technical: parsed.technical,
+            finalScore: parsed.finalScore,
+            technicalAccuracy: parsed.technicalAccuracy,
+            grammarSuggestions: parsed.grammarSuggestions,
+            areasForImprovement: parsed.areasForImprovement
         });
 
     } catch (error) {
@@ -433,7 +444,7 @@ export const finishInterview = async (req, res) => {
 
             questionWiseScore: interview.questions.map((q) => ({
                 question: q.question,
-                answer: q.answer,
+                answer: q.answer || "",
                 timeTaken: q.timeTaken || 0,
                 score: q.score || 0,
                 feedback: q.feedback || "",
@@ -441,6 +452,9 @@ export const finishInterview = async (req, res) => {
                 communication: q.communication || 0,
                 correctness: q.correctness || 0,
                 technical: q.technical || 0,
+                technicalAccuracy: q.technicalAccuracy || "",
+                grammarSuggestions: q.grammarSuggestions || "",
+                areasForImprovement: q.areasForImprovement || ""
             })),
         });
 
@@ -566,7 +580,7 @@ export const getInterviewReport = async (req, res) => {
 
             questionWiseScore: interview.questions.map((q) => ({
                 question: q.question,
-                answer: q.answer,
+                answer: q.answer || "",
                 timeTaken: q.timeTaken || 0,
                 score: q.score || 0,
                 feedback: q.feedback || "",
@@ -574,9 +588,10 @@ export const getInterviewReport = async (req, res) => {
                 communication: q.communication || 0,
                 correctness: q.correctness || 0,
                 technical: q.technical || 0,
+                technicalAccuracy: q.technicalAccuracy || "",
+                grammarSuggestions: q.grammarSuggestions || "",
+                areasForImprovement: q.areasForImprovement || ""
             })),
-            
-            activityEvents: interview.activityEvents || []
         });
     } catch (e) {
         console.error("Interview Report Error:", e);

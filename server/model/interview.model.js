@@ -12,7 +12,10 @@ const questionSchema = new mongoose.Schema({
     confidence: {type: Number, default: 0},
     communication: {type: Number, default: 0},
     correctness: {type: Number, default: 0},
-    technical: {type: Number, default: 0}
+    technical: {type: Number, default: 0},
+    technicalAccuracy: { type: String, default: "" },
+    grammarSuggestions: { type: String, default: "" },
+    areasForImprovement: { type: String, default: "" }
 },{timestamps:true});
 
 

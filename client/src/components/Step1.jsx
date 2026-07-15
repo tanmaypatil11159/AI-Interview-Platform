@@ -107,6 +107,21 @@ function Step1({ onStart }) {
     };
   }, [showAnalysisModal]);
 
+  // Function to request fullscreen from user gesture
+  const requestFullscreen = async () => {
+    try {
+      if (!document.documentElement.requestFullscreen) {
+        throw new Error("Fullscreen API is not supported in this browser.");
+      }
+      await document.documentElement.requestFullscreen();
+      return true;
+    } catch (err) {
+      console.error("Fullscreen request failed:", err);
+      setStartError("Full Screen Mode is required to continue your interview. Please enable Full Screen Mode and try again.");
+      return false;
+    }
+  };
+
   const handleStart = async () => {
     if (!role.trim() || !experience.trim()) {
       setStartError("Please enter both role and experience before starting the interview.");
@@ -114,6 +129,12 @@ function Step1({ onStart }) {
     }
 
     setStartError("");
+
+    // Request fullscreen FIRST from user gesture
+    const fullscreenSuccess = await requestFullscreen();
+    if (!fullscreenSuccess) {
+      return;
+    }
 
     try {
       setLoading(true);
